@@ -34,26 +34,41 @@ package org.firstinspires.ftc.teamcode.Util ;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorImpl;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.lasarobotics.library.sensor.modernrobotics.Voltage;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Demonstrates empty OpMode
  */
-@Autonomous(name = "Util: Voltage Tester", group = "Util")
-public class VoltageTestOpMode extends OpMode {
+@Autonomous(name = "Util: Encoder Tester", group = "Util")
+public class EncoderTestOpMode extends OpMode {
+
+    DcMotor[] test;
 
     private ElapsedTime runtime = new ElapsedTime();
     Voltage voltageSensor;
+
+    ArrayList<DcMotor> motors;
 
     @Override
     public void init() {
         telemetry.addData("Status", "Initialized");
         voltageSensor = new Voltage(hardwareMap);
+
+        motors = new ArrayList<>();
+        Iterator<DcMotor> iterator = hardwareMap.dcMotor.iterator();
+        for (int i = 0; i < hardwareMap.dcMotor.size(); i++) {
+            motors.add(iterator.next());
+        }
     }
 
     /*
@@ -80,5 +95,8 @@ public class VoltageTestOpMode extends OpMode {
     @Override
     public void loop() {
         telemetry.addData("Battery voltage", voltageSensor.getVoltage());
+        for (DcMotor motor: motors) {
+            telemetry.addData("Encoder Count - " + motor.getDeviceName(), motor.getCurrentPosition());
+        }
     }
 }
