@@ -15,6 +15,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+import org.firstinspires.ftc.teamcode.AutonomousNavigation.Waypoint.Transform.Transform;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -121,7 +122,11 @@ public class VuforiaPositionFinder {
          */
          trackables.activate();
     }
-    public OpenGLMatrix FindPosition () {
+    public Transform FindPosition () {
+
+        Transform[] transforms = new Transform[allTrackables.size()];
+
+        int index = 0;
         for (VuforiaTrackable trackable : allTrackables) {
             /**
              * getUpdatedRobotLocation() will return null if no new information is available since
@@ -131,8 +136,13 @@ public class VuforiaPositionFinder {
 
             OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)trackable.getListener()).getUpdatedRobotLocation();
             if (robotLocationTransform == null) {
-                return null;
+                continue;
             }
+
+            
+
+            index++;
+
         }
         return lastLocation;
 

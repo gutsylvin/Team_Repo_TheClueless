@@ -36,6 +36,11 @@ public class GyroAndVuforiaWaypointNavigator extends WaypointNavigator {
             // Fallback to gyros + encoders
 
         }
+        else {
+            // Use Vuforia (estimated) position
+
+
+        }
 
     }
 }
