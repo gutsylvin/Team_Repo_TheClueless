@@ -31,8 +31,8 @@ public class GyroAndVuforiaWaypointNavigator extends WaypointNavigator {
     // Drives to target
     @Override
     public void DriveToTarget() {
-        OpenGLMatrix matrixPosition = finder.FindPosition();
-        if (matrixPosition == null) {
+        Transform position = finder.FindPosition();
+        if (position == null) {
             // Fallback to gyros + encoders
 
         }
