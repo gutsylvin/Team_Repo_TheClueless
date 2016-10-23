@@ -3,10 +3,12 @@ package org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual;
 /**
  * Created by hsunx on 10/21/2016.
  */
+import android.content.Context;
 import android.os.Environment;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -22,12 +24,15 @@ public class JsonInterpreter {
         return movementInstructions.toArray(instructions);
     }
 
-    public MovementInstruction[] FromTxtFile (String fileOnSDCard) {
+    // Do include the file extension
+    public MovementInstruction[] FromTxtFile (String fileInFIRSTDirectory) {
         StringBuilder text = new StringBuilder();
         BufferedReader reader;
         try {
-            File sdCard = Environment.getExternalStorageDirectory();
-            File file = new File (sdCard, fileOnSDCard);
+            File root = Environment.getRootDirectory();
+
+            // Ideally this wouldn't be hardcoded, but ZTE is fucking retarded
+            File file = new File("/sdcard" + fileInFIRSTDirectory);
             reader = new BufferedReader(new FileReader(file));
             String line;
             while ((line = reader.readLine()) != null) {

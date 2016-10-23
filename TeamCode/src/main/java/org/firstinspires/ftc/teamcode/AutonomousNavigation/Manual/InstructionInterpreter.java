@@ -10,12 +10,20 @@ public abstract class InstructionInterpreter {
     DcMotor leftDrive;
     DcMotor rightDrive;
 
+    int leftEncoder, rightEncoder;
+    int previousLeft, previousRight;
+
     boolean finished;
 
     MovementInstruction[] instructionSet;
+    MovementInstruction currentInstruction;
+
+    int currentInstructionIndex;
 
     public void SetInstructions (MovementInstruction[] instructions) {
         instructionSet = instructions;
+        currentInstructionIndex = 0;
+        currentInstruction = instructionSet[currentInstructionIndex];
     }
 
     public InstructionInterpreter (DcMotor left, DcMotor right) {
@@ -23,6 +31,6 @@ public abstract class InstructionInterpreter {
         rightDrive = right;
     }
 
-    public abstract boolean Finished ();
+    public abstract void Finished ();
     public abstract void ExecuteInstruction ();
 }
