@@ -18,6 +18,8 @@ public class GyroAndVuforiaWaypointNavigator extends WaypointNavigator {
     // Uses PID!
     PidController pidController;
 
+    boolean debug = true;
+
     // Motors
     DcMotor leftMotor;
     DcMotor rightMotor;
