@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual;
 /**
  * Created by hsunx on 10/21/2016.
  */
-import android.content.Context;
+
 import android.os.Environment;
 
 import com.google.gson.Gson;
@@ -14,25 +14,25 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.List;
+import java.lang.reflect.Type;
+import java.util.Map;
 
 public class JsonInterpreter {
-    public MovementInstruction[] FromString (String string) {
+    public Instruction FromString (String string) {
         Gson gson = new Gson();
-        List<MovementInstruction> movementInstructions = gson.fromJson(string, new TypeToken<List<MovementInstruction>>(){}.getType());
-        MovementInstruction[] instructions = new MovementInstruction[movementInstructions.size()];
-        return movementInstructions.toArray(instructions);
+        Type type = new TypeToken<Map<String, String>>(){}.getType();
+        Map<String, String> myMap = gson.fromJson(string, type);
+        return FromString(myMap);
     }
 
     // Do include the file extension
-    public MovementInstruction[] FromTxtFile (String fileInFIRSTDirectory) {
+    public Instruction[] FromTxtFile (String fileInFIRSTDirectory) {
         StringBuilder text = new StringBuilder();
         BufferedReader reader;
         try {
-            File root = Environment.getRootDirectory();
+            File sdCard = Environment.getExternalStorageDirectory();
 
-            // Ideally this wouldn't be hardcoded, but ZTE is fucking retarded
-            File file = new File("/sdcard" + fileInFIRSTDirectory);
+            File file = new File(sdCard + "/FIRST/" + fileInFIRSTDirectory);
             reader = new BufferedReader(new FileReader(file));
             String line;
             while ((line = reader.readLine()) != null) {
@@ -44,6 +44,34 @@ public class JsonInterpreter {
         catch (IOException e) {
             e.printStackTrace();
         }
-        return FromString(text.toString());
+        // Oh god this is such a horrible hack. Ah well - less than a month to competition
+        String[] instructionStrings = text.toString().split("---");
+        Instruction[] instructions = new Instruction[instructionStrings.length];
+
+        for (int i = 0; i < instructionStrings.length; i++) {
+            instructions[i] = FromString(instructionStrings[i]);
+        }
+
+        return instructions;
+    }
+
+    public Instruction FromString (Map <String, String> map) {
+        if (!map.containsKey("type")) {
+            RobotLog.e("Well shit. JSON Interpreter failed, no type argument found");
+            return null;
+        }
+        // All has gone well
+        Instruction instruction = Instructions.valueOf(map.get("type")).instruction;
+        instruction.FromMap(map);
+        return instruction;
+    }
+
+    public enum Instructions {
+        Movement (new MovementInstruction());
+
+        final Instruction instruction;
+        Instructions (Instruction instruction) {
+            this.instruction = instruction;
+        }
     }
 }

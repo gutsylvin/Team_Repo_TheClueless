@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
  * Created by hsunx on 10/21/2016.
  */
 
-public abstract class InstructionInterpreter {
+public class InstructionInterpreter {
     DcMotor leftDrive;
     DcMotor rightDrive;
 
@@ -31,6 +31,10 @@ public abstract class InstructionInterpreter {
         rightDrive = right;
     }
 
-    public abstract void Finished ();
-    public abstract void ExecuteInstruction ();
+    public void Finished () {
+
+    }
+    public void ExecuteInstruction () {
+
+    }
 }
