@@ -134,13 +134,16 @@ public class test extends LinearOpMode {
          * example "StonesAndChips", datasets can be found in in this project in the
          * documentation directory.
          */
-        VuforiaTrackables stonesAndChips = this.vuforia.loadTrackablesFromAsset("FTC_2016-17");
-        VuforiaTrackable redTarget = stonesAndChips.get(0);
-        redTarget.setName("RedTarget");  // Wheels
+        VuforiaTrackables targets = this.vuforia.loadTrackablesFromAsset("FTC_2016-17");
+        VuforiaTrackable gears = targets.get(3);
+        gears.setName("gears");  // Wheels
+
+        VuforiaTrackable tools = targets.get(1);
+        tools.setName("tools");
 
         /** For convenience, gather together all the trackable objects in one easily-iterable collection */
         List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
-        allTrackables.addAll(stonesAndChips);
+        allTrackables.addAll(targets);
 
         /**
          * We use units of mm here because that's the recommended units of measurement for the
@@ -209,16 +212,21 @@ public class test extends LinearOpMode {
          * - Then we rotate it  90 around the field's Z access to face it away from the audience.
          * - Finally, we translate it back along the X axis towards the red audience wall.
          */
-        OpenGLMatrix redTargetLocationOnField = OpenGLMatrix
+        OpenGLMatrix gearsLocation = OpenGLMatrix
                 /* Then we translate the target off to the RED WALL. Our translation here
                 is a negative translation in X.*/
-                .translation(0, 0, 0)
+                .translation(-1790, (1/2) * 1790, 3.81f)
                 .multiplied(Orientation.getRotationMatrix(
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XZX,
                         AngleUnit.DEGREES, 90, 90, 0));
-        redTarget.setLocation(redTargetLocationOnField);
-        RobotLog.ii(TAG, "Red Target=%s", format(redTargetLocationOnField));
+
+        OpenGLMatrix toolsLocation = OpenGLMatrix.translation(-1790, -(1/2) * 1790, 3.81f).multiplied(Orientation.getRotationMatrix(
+                AxesReference.EXTRINSIC, AxesOrder.XZX, AngleUnit.DEGREES, 90, 90 ,0
+        ));
+
+        gears.setLocation(gearsLocation);
+        tools.setLocation(toolsLocation);
 
 
 
@@ -235,7 +243,7 @@ public class test extends LinearOpMode {
          * plane) is then CCW, as one would normally expect from the usual classic 2D geometry.
          */
         OpenGLMatrix phoneLocationOnRobot = OpenGLMatrix
-                .translation(0,0,0);
+                .translation(0,0,0).multiplied(Orientation.getRotationMatrix(AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES, 90, 0, 0));
 
         RobotLog.ii(TAG, "phone=%s", format(phoneLocationOnRobot));
 
@@ -244,8 +252,8 @@ public class test extends LinearOpMode {
          * listener is a {@link VuforiaTrackableDefaultListener} and can so safely cast because
          * we have not ourselves installed a listener of a different type.
          */
-        ((VuforiaTrackableDefaultListener)redTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
-
+        ((VuforiaTrackableDefaultListener)gears.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener)tools.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
         /**
          * A brief tutorial: here's how all the math is going to work:
          *
@@ -271,7 +279,7 @@ public class test extends LinearOpMode {
         waitForStart();
 
         /** Start tracking the data sets we care about. */
-        stonesAndChips.activate();
+        targets.activate();
 
         while (opModeIsActive()) {
 

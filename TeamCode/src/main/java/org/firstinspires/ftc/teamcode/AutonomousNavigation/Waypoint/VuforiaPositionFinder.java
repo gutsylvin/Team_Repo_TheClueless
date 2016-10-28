@@ -123,8 +123,8 @@ public class VuforiaPositionFinder {
          trackables.activate();
     }
     public Transform FindPosition () {
-
-        Transform[] transforms = new Transform[allTrackables.size()];
+        ArrayList<Transform> transformsList = new ArrayList<>();
+        Transform[] transforms;
 
         int index = 0;
         for (VuforiaTrackable trackable : allTrackables) {
@@ -139,12 +139,24 @@ public class VuforiaPositionFinder {
                 continue;
             }
 
-            
-
+            transformsList.add(Transform.FromVuforiaOpenGLMatrix(robotLocationTransform));
             index++;
 
+
         }
-        return lastLocation;
+
+        Transform[] temp = new Transform[transformsList.size()];
+        transforms = transformsList.toArray(temp);
+
+        //TODO make this be an average of the positions
+        if (transforms.length == 0) {
+            return null;
+        }
+        return transforms[0];
 
     }
+
+
+
+
 }
