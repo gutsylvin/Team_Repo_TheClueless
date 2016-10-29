@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual;
 
+import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
+
 import java.util.Map;
 
 /**
@@ -7,8 +9,11 @@ import java.util.Map;
  */
 
 public interface Instruction {
+
+    boolean finished = false;
+
     void Loop ();
-    boolean Finished ();
+    void Finished ();
     void Init ();
     void FromMap(Map<String, String> map);
 }

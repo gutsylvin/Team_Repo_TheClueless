@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
+
 import org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot;
 
 /**
@@ -17,7 +19,7 @@ import org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot;
 @Autonomous(name = "Autonomous: GyroAutonomous", group = "Autonomous")
 public class AutonomousOpMode extends LinearOpMode {
     /* Declare OpMode members. */
-    HardwarePushbot robot   = new HardwarePushbot();   // Use a Pushbot's hardware
+    Robot robot   = new Robot();   // Use a Pushbot's hardware
     ModernRoboticsI2cGyro gyro    = null;                    // Additional Gyro device
 
     static final double     COUNTS_PER_MOTOR_REV    = 1440 ;    // eg: TETRIX Motor Encoder
@@ -42,7 +44,7 @@ public class AutonomousOpMode extends LinearOpMode {
          * Initialize the standard drive system variables.
          * The init() method of the hardware class does most of the work here
          */
-        robot.init(hardwareMap);
+        robot.init(hardwareMap, telemetry);
         gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
 
         // Ensure the robot it stationary, then reset the encoders and calibrate the gyro.
@@ -113,7 +115,6 @@ public class AutonomousOpMode extends LinearOpMode {
 
         // Ensure that the opmode is still active
         if (opModeIsActive()) {
-
             // Determine new target position, and pass to motor controller
             moveCounts = (int)(distance * COUNTS_PER_INCH);
             newLeftTarget = robot.leftMotor.getCurrentPosition() + moveCounts;
@@ -130,6 +131,7 @@ public class AutonomousOpMode extends LinearOpMode {
             speed = Range.clip(Math.abs(speed), 0.0, 1.0);
             robot.leftMotor.setPower(speed);
             robot.rightMotor.setPower(speed);
+
 
             // keep looping while we are still active, and BOTH motors are running.
             while (opModeIsActive() &&
