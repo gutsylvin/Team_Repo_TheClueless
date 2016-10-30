@@ -3,12 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.ServoController;
-import com.qualcomm.robotcore.hardware.ServoControllerEx;
 import com.qualcomm.robotcore.hardware.ServoEx;
-import com.qualcomm.robotcore.hardware.ServoImpl;
-import com.qualcomm.robotcore.hardware.ServoImplEx;
-import com.qualcomm.robotcore.util.RobotLog;
 
 /**
  * Created by hsunx on 10/29/2016.
@@ -22,18 +17,14 @@ public class QuickTestOpMode extends OpMode {
     double servoPosition;
     @Override
     public void init() {
-        Servo servo = hardwareMap.servo.get("servo");
-        if (servo instanceof ServoEx) {
-            extendedServo = (ServoEx) servo;
-            this.servo = servo;
-            extendedServo.setPwmRange(new ServoEx.ServoPwmRange(553, 2425));
-            extendedServo.setPwmEnable();
+        ServoEx servo = hardwareMap.get(ServoEx.class, "servo");
+        if (servo == null) {
+            // Make sure something crashes
+            int x = 0/0;
         }
-        else {
-            RobotLog.e("shit");
-            this.servo = servo;
-            this.servo.scaleRange(0, 1.3);
-        }
+        this.servo = hardwareMap.servo.get("servo");
+        extendedServo.setPwmRange(new ServoEx.ServoPwmRange(553, 2425));
+        extendedServo.setPwmEnable();
     }
 
     @Override

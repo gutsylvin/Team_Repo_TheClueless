@@ -3,7 +3,6 @@ package org.firstinspires.ftc.robotcontroller.external.samples;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 /**
@@ -37,7 +36,6 @@ public class ConceptScanServo extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-
         // Connect to servo (Assume PushBot Left Claw)
         // Change the text in quotes to match any servo name on your robot.
         servo = hardwareMap.servo.get("left claw");
