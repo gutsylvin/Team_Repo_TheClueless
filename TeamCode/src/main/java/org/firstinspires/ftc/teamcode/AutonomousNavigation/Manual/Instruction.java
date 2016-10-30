@@ -8,12 +8,17 @@ import java.util.Map;
  * Created by Josh on 10/27/2016.
  */
 
-public interface Instruction {
+public abstract class Instruction {
 
-    boolean finished = false;
+    Robot robot;
+    public boolean finished;
+    public boolean initialized;
 
-    void Loop ();
-    void Finished ();
-    void Init ();
-    void FromMap(Map<String, String> map);
+    public abstract void Loop ();
+    public abstract void Finished ();
+    public void Init () {
+        initialized = true;
+        robot = Robot.robot;
+    }
+    public abstract void FromMap(Map<String, String> map);
 }

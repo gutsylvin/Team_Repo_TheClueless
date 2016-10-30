@@ -127,16 +127,15 @@ public class TankTeleop extends OpMode{
         else if (gamepad2.y)
             leftPusherOffset -= CLAW_SPEED;
 
-
         // Move both servos to new position.  Assume servos are mirror image of each other.
-        clawOffset = Range.clip(clawOffset, -0.5, 0.5);
+        clawOffset = Range.clip(clawOffset, 0, 1);
         robot.leftScissorliftServo.setPosition(clawOffset);
         robot.rightScissorliftServo.setPosition(clawOffset);
 
-        leftPusherOffset = Range.clip(leftPusherOffset, -0.5, 0.5);
+        leftPusherOffset = Range.clip(leftPusherOffset, 0, 1);
         robot.leftPushServo.setPosition(leftPusherOffset);
 
-        rightPusherOffset = Range.clip(rightPusherOffset, -0.5, 0.5);
+        rightPusherOffset = Range.clip(rightPusherOffset, 0, 1);
         robot.rightPushServo.setPosition(rightPusherOffset);
 
         if (gamepad1.a) {

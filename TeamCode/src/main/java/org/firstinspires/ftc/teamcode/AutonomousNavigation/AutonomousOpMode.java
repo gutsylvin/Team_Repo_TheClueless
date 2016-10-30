@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.InstructionInterpreter;
+import org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.JsonInterpreter;
 import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
 
 import org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot;
@@ -80,8 +82,20 @@ public class AutonomousOpMode extends LinearOpMode {
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
         // Put a hold after each turn
 
-        // Implement a state machine here
+        // Start instruction interpreting
+        InstructionInterpreter interpreter = new InstructionInterpreter();
+        JsonInterpreter jsonInterpreter = new JsonInterpreter();
 
+        interpreter.SetInstructions(jsonInterpreter.FromTxtFile("{\n" +
+                "\"type\" = \"Movement\"\n" +
+                "\"angle\" = \"90\"\n" +
+                "\"distance\" = \"40000\"\n" +
+                "\"power\" = \"0.5\"\n" +
+                "}", null));
+
+        while (opModeIsActive()) {
+            interpreter.ExecuteInstruction();
+        }
 
         telemetry.addData("Path", "Complete");
         telemetry.update();

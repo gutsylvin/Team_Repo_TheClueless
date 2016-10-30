@@ -55,6 +55,17 @@ public class JsonInterpreter {
         return instructions;
     }
 
+    public Instruction[] FromTxtFile (String text, Object dummy/* yep deal with it */) {
+        String[] instructionStrings = text.split("---");
+        Instruction[] instructions = new Instruction[instructionStrings.length];
+
+        for (int i = 0; i < instructionStrings.length; i++) {
+            instructions[i] = FromString(instructionStrings[i]);
+        }
+
+        return instructions;
+    }
+
     public Instruction FromString (Map <String, String> map) {
         if (!map.containsKey("type")) {
             RobotLog.e("Well shit. JSON Interpreter failed, no type argument found");

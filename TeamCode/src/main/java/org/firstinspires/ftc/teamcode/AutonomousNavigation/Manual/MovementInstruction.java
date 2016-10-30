@@ -12,13 +12,12 @@ import java.util.Map;
  * Created by hsunx on 10/21/2016.
  */
 
-public class MovementInstruction implements Instruction {
+public class MovementInstruction extends Instruction {
     public final float P_DRIVE_COEFF = 0.15f;
 
     public float angle;
     public float distance;
     public float power;
-    Robot robot;
 
     int     newLeftTarget;
     int     newRightTarget;
@@ -51,7 +50,7 @@ public class MovementInstruction implements Instruction {
 
     @Override
     public void Init() {
-        robot = Robot.robot;
+        super.Init();
 
         // Determine new target position, and pass to motor controller
 
@@ -107,13 +106,21 @@ public class MovementInstruction implements Instruction {
             robot.telemetry.update();
         }
         else {
-
+            Finished();
         }
     }
 
     @Override
     public void Finished() {
+        finished = true;
 
+        // Stop all motion
+        robot.leftMotor.setPower(0);
+        robot.rightMotor.setPower(0);
+
+        // Turn off RUN_TO_POSITION
+        robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     public double getError(double targetAngle) {
