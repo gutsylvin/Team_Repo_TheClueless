@@ -1,23 +1,24 @@
 package org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual;
 
+import com.google.gson.annotations.Expose;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.Range;
-import com.qualcomm.robotcore.util.RobotLog;
-
-import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
-
-import java.util.Map;
 
 /**
  * Created by hsunx on 10/21/2016.
  */
 
-public class MovementInstruction extends Instruction {
-    public final float P_DRIVE_COEFF = 0.15f;
 
-    public float angle;
-    public float distance;
-    public float power;
+public class MovementInstruction extends Instruction {
+
+    final float P_DRIVE_COEFF = 0.15f;
+
+    @Expose
+    public double angle;
+    @Expose
+    public double distance;
+    @Expose
+    public double power;
 
     int     newLeftTarget;
     int     newRightTarget;
@@ -28,25 +29,7 @@ public class MovementInstruction extends Instruction {
     double  leftSpeed;
     double  rightSpeed;
 
-    @Override
-    public void FromMap(Map<String, String> map) {
-        if ("Novement" == map.get("type")) {
-            // Very good
-            try {
-                angle = Float.parseFloat(map.get("angle"));
-                distance = Float.parseFloat(map.get("distance"));
-                power = Float.parseFloat(map.get("power"));
-            }
-            catch (NumberFormatException n) {
-                RobotLog.e("Wtf that isn't even a float");
-                n.printStackTrace();
-            }
-        }
-        else {
-            // Well crap
-            RobotLog.e("SHIIIIT THERE IS NO TYPE YOU DINGUSMASTER50000");
-        }
-    }
+
 
     @Override
     public void Init() {

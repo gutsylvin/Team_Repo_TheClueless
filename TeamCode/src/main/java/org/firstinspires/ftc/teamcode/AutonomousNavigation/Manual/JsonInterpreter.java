@@ -7,22 +7,36 @@ package org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual;
 import android.os.Environment;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.qualcomm.robotcore.util.RobotLog;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.Map;
+import java.util.List;
 
 public class JsonInterpreter {
-    public Instruction FromString (String string) {
-        Gson gson = new Gson();
-        Type type = new TypeToken<Map<String, String>>(){}.getType();
-        Map<String, String> myMap = gson.fromJson(string, type);
-        return FromString(myMap);
+    final String TYPE_INSTRUCTION_SEPERATOR = "###";
+
+    private Instruction[] FromString (String string) {
+        // Initialize all dat json stuffs
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.excludeFieldsWithoutExposeAnnotation();
+        Gson gson = gsonBuilder.create();
+
+        String[] temp = string.split(TYPE_INSTRUCTION_SEPERATOR);
+        String types = temp[0];
+        String instructions = temp[1];
+
+        Type typeStringsType = new TypeToken<List<String>>(){}.getType();
+        List<String> typeStrings = gson.fromJson(types, typeStringsType);
+
+        for (String type : typeStrings) {
+            Instructions instructionType = Instructions.valueOf(type);
+            Class<? extends Instruction> instruction = instructionType.instruction.getClass();
+        }
     }
 
     // Do include the file extension
@@ -40,47 +54,18 @@ public class JsonInterpreter {
                 text.append(" ");
             }
             reader.close();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
-        // Oh god this is such a horrible hack. Ah well - less than a month to competition
-        String[] instructionStrings = text.toString().split("---");
-        Instruction[] instructions = new Instruction[instructionStrings.length];
 
-        for (int i = 0; i < instructionStrings.length; i++) {
-            instructions[i] = FromString(instructionStrings[i]);
-        }
-
-        return instructions;
-    }
-
-    public Instruction[] FromTxtFile (String text, Object dummy/* yep deal with it */) {
-        String[] instructionStrings = text.split("---");
-        Instruction[] instructions = new Instruction[instructionStrings.length];
-
-        for (int i = 0; i < instructionStrings.length; i++) {
-            instructions[i] = FromString(instructionStrings[i]);
-        }
-
-        return instructions;
-    }
-
-    public Instruction FromString (Map <String, String> map) {
-        if (!map.containsKey("type")) {
-            RobotLog.e("Well shit. JSON Interpreter failed, no type argument found");
-            return null;
-        }
-        // All has gone well
-        Instruction instruction = Instructions.valueOf(map.get("type")).instruction;
-        instruction.FromMap(map);
-        return instruction;
+        return FromString(text.toString());
     }
 
     public enum Instructions {
-        Movement (new MovementInstruction());
+        movement (new MovementInstruction());
 
         final Instruction instruction;
+
         Instructions (Instruction instruction) {
             this.instruction = instruction;
         }
