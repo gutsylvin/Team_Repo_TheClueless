@@ -48,7 +48,7 @@ public class Swerve {
         double c = yOut - rot / 2;
         double d = yOut + rot / 2;
 
-        //Calculates magnitude of motor power needed by using the Pythagorean Theorem on the x and y vectors
+        //Calculates magnitude of motor speed needed by using the Pythagorean Theorem on the x and y vectors
         double wrf = Math.sqrt(b * b + c * c);
         double wlf = Math.sqrt(b * b + d * d);
         double wlb = Math.sqrt(a * a + d * d);
@@ -89,7 +89,7 @@ public class Swerve {
             }
         }
 
-        //Set motor power (can move forward and backward)
+        //Set motor speed (can move forward and backward)
         rightFront.setPower(wheelspeed[0]);
         leftFront.setPower(wheelspeed[1]);
         leftBack.setPower(wheelspeed[2]);

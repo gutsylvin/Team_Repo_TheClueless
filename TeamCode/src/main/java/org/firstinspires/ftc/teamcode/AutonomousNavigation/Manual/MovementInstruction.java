@@ -18,7 +18,7 @@ public class MovementInstruction extends Instruction {
     @Expose
     public double distance;
     @Expose
-    public double power;
+    public double speed;
 
     int     newLeftTarget;
     int     newRightTarget;
@@ -50,9 +50,9 @@ public class MovementInstruction extends Instruction {
         robot.rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         // start motion.
-        power = Range.clip(Math.abs(power), 0.0f, 1.0f);
-        robot.leftMotor.setPower(power);
-        robot.rightMotor.setPower(power);
+        speed = Range.clip(Math.abs(speed), 0.0f, 1.0f);
+        robot.leftMotor.setPower(speed);
+        robot.rightMotor.setPower(speed);
     }
 
     @Override
@@ -66,8 +66,8 @@ public class MovementInstruction extends Instruction {
             if (distance < 0)
                 steer *= -1.0;
 
-            leftSpeed = power - steer;
-            rightSpeed = power + steer;
+            leftSpeed = speed - steer;
+            rightSpeed = speed + steer;
 
             // Normalize speeds if any one exceeds +/- 1.0;
             max = Math.max(Math.abs(leftSpeed), Math.abs(rightSpeed));
@@ -127,4 +127,8 @@ public class MovementInstruction extends Instruction {
         return Range.clip(error * PCoeff, -1, 1);
     }
 
+    @Override
+    public String toString() {
+        return name + " angle: " + angle + " distance: " + distance + " speed: " + speed;
+    }
 }

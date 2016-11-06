@@ -46,38 +46,38 @@ public class AutonomousOpMode extends LinearOpMode {
          * Initialize the standard drive system variables.
          * The init() method of the hardware class does most of the work here
          */
-        robot.init(hardwareMap, telemetry);
-        gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
+        // robot.init(hardwareMap, telemetry);
+        // gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
 
         // Ensure the robot it stationary, then reset the encoders and calibrate the gyro.
-        robot.leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        // robot.leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        // robot.rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         // Send telemetry message to alert driver that we are calibrating;
         telemetry.addData(">", "Calibrating Gyro");    //
         telemetry.update();
 
-        gyro.calibrate();
+        // gyro.calibrate();
         // make sure the gyro is calibrated before continuing
-        while (gyro.isCalibrating())  {
+        /*while (gyro.isCalibrating())  {
             Thread.sleep(50);
             idle();
-        }
+        }*/
 
         telemetry.addData(">", "Robot Ready.");    //
         telemetry.update();
 
-        robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // Wait for the game to start (Display Gyro value), and reset gyro before we move..
-        while (!isStarted()) {
+        /*while (!isStarted()) {
             telemetry.addData(">", "Robot Heading = %d", gyro.getIntegratedZValue());
             telemetry.update();
             idle();
         }
         gyro.resetZAxisIntegrator();
-
+        */
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
         // Put a hold after each turn
@@ -86,12 +86,7 @@ public class AutonomousOpMode extends LinearOpMode {
         InstructionInterpreter interpreter = new InstructionInterpreter();
         JsonInterpreter jsonInterpreter = new JsonInterpreter();
 
-        interpreter.SetInstructions(jsonInterpreter.FromTxtFile("{\n" +
-                "\"type\" = \"Movement\"\n" +
-                "\"angle\" = \"90\"\n" +
-                "\"distance\" = \"40000\"\n" +
-                "\"power\" = \"0.5\"\n" +
-                "}", null));
+        interpreter.SetInstructions(jsonInterpreter.FromTxtFile("sample.json"));
 
         while (opModeIsActive()) {
             interpreter.ExecuteInstruction();
@@ -265,7 +260,7 @@ public class AutonomousOpMode extends LinearOpMode {
         double leftSpeed;
         double rightSpeed;
 
-        // determine turn power based on +/- error
+        // determine turn speed based on +/- error
         error = getError(angle);
 
         if (Math.abs(error) <= HEADING_THRESHOLD) {

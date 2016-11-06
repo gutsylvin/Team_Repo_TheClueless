@@ -1,14 +1,26 @@
 package org.firstinspires.ftc.teamcode.RobotHardware;
 
+import android.os.DropBoxManager;
+
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+
+import java.lang.reflect.Field;
+import java.util.AbstractMap;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by hsunx on 10/28/2016.
@@ -105,12 +117,24 @@ public class Robot {
     public void waitForTick(long periodMs) throws InterruptedException {
 
         long  remaining = periodMs - (long)period.milliseconds();
-
         // sleep for the remaining portion of the regular cycle period.
         if (remaining > 0)
             Thread.sleep(remaining);
 
         // Reset the cycle clock for the next pass.
         period.reset();
+    }
+
+    public enum Servos {
+        leftPushServo (Robot.robot.leftPushServo),
+        rightPushServo (Robot.robot.rightPushServo),
+        leftScissorLiftServo (Robot.robot.leftScissorliftServo),
+        rightScissorLiftServo (Robot.robot.rightScissorliftServo);
+
+        final Servo servo;
+
+        Servos (Servo servo) {
+            this.servo = servo;
+        }
     }
 }

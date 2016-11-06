@@ -1,7 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsUsbServoController;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoEx;
 
@@ -12,11 +14,16 @@ import com.qualcomm.robotcore.hardware.ServoEx;
 public class QuickTestOpMode extends OpMode {
     ServoEx extendedServo;
     Servo servo;
+    CRServo crservo;
     boolean clockwise = true;
     double servoSpeed = 0.02;
     double servoPosition;
     @Override
     public void init() {
+        ModernRoboticsUsbServoController servoController;
+        crservo.
+        servoController = (ModernRoboticsUsbServoController)hardwareMap.servoController.get("Servo Controller 1");
+        servoController.
         ServoEx servo = hardwareMap.get(ServoEx.class, "servo");
         if (servo == null) {
             // Make sure something crashes
