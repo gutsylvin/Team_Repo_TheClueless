@@ -40,7 +40,7 @@ public class TurnInstruction extends Instruction {
         double leftSpeed;
         double rightSpeed;
 
-        // determine turn power based on +/- error
+        // determine turn speed based on +/- error
         error = getError(angle);
 
         if (Math.abs(error) <= HEADING_THRESHOLD) {
@@ -87,5 +87,10 @@ public class TurnInstruction extends Instruction {
      */
     public double getSteer(double error, double PCoeff) {
         return Range.clip(error * PCoeff, -1, 1);
+    }
+
+    @Override
+    public String toString() {
+        return name + "angle: " + angle + "speed: " + speed;
     }
 }

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual;
 
+import com.google.gson.annotations.Expose;
+
 import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
 
 /**
@@ -12,6 +14,7 @@ public abstract class Instruction {
     public boolean finished;
     public boolean initialized;
 
+    @Expose
     public String name;
 
     public abstract void Loop ();
@@ -19,5 +22,10 @@ public abstract class Instruction {
     public void Init () {
         initialized = true;
         robot = Robot.robot;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString();
     }
 }
