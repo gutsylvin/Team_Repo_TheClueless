@@ -9,6 +9,7 @@ import android.os.Environment;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsUsbServoController;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -20,6 +21,7 @@ import java.util.List;
 public class JsonInterpreter {
     final String TYPE_INSTRUCTION_SEPERATOR = "###";
 
+    ModernRoboticsUsbServoController
     private Instruction[] FromString (String string) {
         // Initialize all dat json stuffs
         GsonBuilder gsonBuilder = new GsonBuilder();
