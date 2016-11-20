@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual;
+package org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.Instructions;
 
 import com.google.gson.annotations.Expose;
 
@@ -18,7 +18,9 @@ public abstract class Instruction {
     public String name;
 
     public abstract void Loop ();
-    public abstract void Finished ();
+    public void Finished () {
+        finished = true;
+    }
     public void Init () {
         initialized = true;
         robot = Robot.robot;

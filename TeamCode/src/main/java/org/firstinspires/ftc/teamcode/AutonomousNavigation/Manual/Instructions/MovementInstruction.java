@@ -1,8 +1,10 @@
-package org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual;
+package org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.Instructions;
 
 import com.google.gson.annotations.Expose;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.Range;
+
+import org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.Instructions.Instruction;
 
 /**
  * Created by hsunx on 10/21/2016.

@@ -1,8 +1,8 @@
 package org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual;
 
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.Instructions.Instruction;
 import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
 
 /**

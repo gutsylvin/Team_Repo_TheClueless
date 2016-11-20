@@ -1,8 +1,18 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.adafruit.AdafruitI2cColorSensor;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsAnalogOpticalDistanceSensor;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsDigitalTouchSensor;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cColorSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.I2cDevice;
+import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
+
+import org.firstinspires.ftc.robotcontroller.external.samples.SensorMROpticalDistance;
 
 /**
  * Created by hsunx on 10/29/2016.
@@ -10,16 +20,15 @@ import com.qualcomm.robotcore.hardware.Servo;
 @Autonomous (name = "Servo Tester", group = "Test")
 public class QuickTestOpMode extends OpMode {
 
-    Servo servo;
+    ModernRoboticsDigitalTouchSensor touchSensor;
+    ModernRoboticsI2cColorSensor colorSensor;
+    ModernRoboticsAnalogOpticalDistanceSensor ods;
 
-    boolean clockwise = true;
-    double servoSpeed = 0.02;
-    double servoPosition;
-
-    double mechanicalEndpoint = 1.0;
     @Override
     public void init() {
-        this.servo = hardwareMap.servo.get("servo");
+        colorSensor = ((ModernRoboticsI2cColorSensor) hardwareMap.colorSensor.get("color_sensor"));
+        touchSensor = ((ModernRoboticsDigitalTouchSensor) hardwareMap.touchSensor.get("touch_sensor"));
+        ods = ((ModernRoboticsAnalogOpticalDistanceSensor) hardwareMap.opticalDistanceSensor.get("ods"));
     }
 
     @Override
@@ -29,12 +38,13 @@ public class QuickTestOpMode extends OpMode {
 
     @Override
     public void loop() {
-        if (servoPosition + gamepad1.left_stick_y * servoSpeed < mechanicalEndpoint) {
-            servo.setPosition(servoPosition + gamepad1.left_stick_y * servoSpeed);
-        }
-        mechanicalEndpoint += gamepad1.left_trigger * servoSpeed;
-        telemetry.addData("servo pos", servo.getPosition());
-        telemetry.addData("endpoint", mechanicalEndpoint);
+        colorSensor.enableLed(touchSensor.isPressed());
+        telemetry.addData("touch", touchSensor.isPressed());
+        telemetry.addData("red", colorSensor.red());
+        telemetry.addData("green", colorSensor.green());
+        telemetry.addData("blue", colorSensor.blue());
+        telemetry.addData("alpha", colorSensor.alpha());
+        telemetry.addData("ods reflect", ods.getLightDetected() + ", raw: " + ods.getRawLightDetected());
     }
 
     @Override

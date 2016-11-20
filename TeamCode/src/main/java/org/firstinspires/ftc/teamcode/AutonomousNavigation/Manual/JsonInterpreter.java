@@ -11,6 +11,13 @@ import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.Instructions.Instruction;
+import org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.Instructions.LineFollowInstruction;
+import org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.Instructions.MovementInstruction;
+import org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.Instructions.PushBeaconButtonInstruction;
+import org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.Instructions.ServoInstruction;
+import org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.Instructions.TurnInstruction;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -103,7 +110,10 @@ public class JsonInterpreter {
 
     public enum Instructions {
         movement (MovementInstruction.class),
-        turn (TurnInstruction.class);
+        turn (TurnInstruction.class),
+        push_beacon (PushBeaconButtonInstruction.class),
+        servo (ServoInstruction.class),
+        follow_line (LineFollowInstruction.class);
 
         final Class<? extends Instruction> instruction;
 

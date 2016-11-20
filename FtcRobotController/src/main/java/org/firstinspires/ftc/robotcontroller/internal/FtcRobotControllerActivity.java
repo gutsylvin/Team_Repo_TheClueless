@@ -45,11 +45,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.webkit.WebView;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -98,6 +101,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class FtcRobotControllerActivity extends Activity {
 
   public static final String TAG = "RCActivity";
+  public static String instructionsPath;
+
+  private static final String PATH_TO_INSTRUCTIONS_FILE = "/storage/sdcard1/FIRST/";
 
   private static final int REQUEST_CONFIG_WIFI_CHANNEL = 1;
   private static final boolean USE_DEVICE_EMULATION = false;
@@ -123,6 +129,8 @@ public class FtcRobotControllerActivity extends Activity {
   protected TextView textOpMode;
   protected TextView textErrorMessage;
   protected ImmersiveMode immersion;
+
+  protected EditText editFile;
 
   protected UpdateUI updateUI;
   protected Dimmer dimmer;
@@ -233,6 +241,26 @@ public class FtcRobotControllerActivity extends Activity {
     textErrorMessage = (TextView) findViewById(R.id.textErrorMessage);
     textGamepad[0] = (TextView) findViewById(R.id.textGamepad1);
     textGamepad[1] = (TextView) findViewById(R.id.textGamepad2);
+
+    editFile = (EditText) findViewById(R.id.editText);
+    editFile.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+      @Override
+      public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+          boolean handled = false;
+          if (actionId == EditorInfo.IME_ACTION_DONE) {
+            instructionsPath = PATH_TO_INSTRUCTIONS_FILE + editFile.getText().toString();
+            if (!new File(instructionsPath).exists()) {
+              editFile.setText("File doesn't exist!", TextView.BufferType.EDITABLE);
+            }
+            else {
+              FtcRobotControllerActivity.instructionsPath = editFile.getText().toString();
+            }
+            handled = true;
+          }
+          return handled;
+      }
+    });
+
     immersion = new ImmersiveMode(getWindow().getDecorView());
     dimmer = new Dimmer(this);
     dimmer.longBright();

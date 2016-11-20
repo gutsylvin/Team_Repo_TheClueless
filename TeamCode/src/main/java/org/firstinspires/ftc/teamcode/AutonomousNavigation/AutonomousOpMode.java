@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
 import org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.InstructionInterpreter;
 import org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.JsonInterpreter;
 import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
@@ -18,7 +19,7 @@ import org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot;
  * Created by hsunx on 10/22/2016.
  */
 
-@Autonomous(name = "Autonomous: GyroAutonomous", group = "Autonomous")
+@Autonomous(name = "Autonomous: Autonomous", group = "Autonomous")
 public class AutonomousOpMode extends LinearOpMode {
     /* Declare OpMode members. */
     Robot robot   = new Robot();   // Use a Pushbot's hardware
@@ -46,69 +47,66 @@ public class AutonomousOpMode extends LinearOpMode {
          * Initialize the standard drive system variables.
          * The init() method of the hardware class does most of the work here
          */
-        // robot.init(hardwareMap, telemetry);
-        // gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
+        robot.init(hardwareMap, telemetry);
+        gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
+
+        robot.rightScissorliftServo.setPosition(0);
+        robot.leftScissorliftServo.setPosition(0);
+        robot.leftPushServo.setPosition(0);
+        robot.rightPushServo.setPosition(0);
 
         // Ensure the robot it stationary, then reset the encoders and calibrate the gyro.
-        // robot.leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        // robot.rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         // Send telemetry message to alert driver that we are calibrating;
         telemetry.addData(">", "Calibrating Gyro");    //
         telemetry.update();
 
-        // gyro.calibrate();
-        // make sure the gyro is calibrated before continuing
-        /*while (gyro.isCalibrating())  {
+        gyro.calibrate();
+
+        while (gyro.isCalibrating())  {
             Thread.sleep(50);
             idle();
-        }*/
+        }
 
         telemetry.addData(">", "Robot Ready.");    //
         telemetry.update();
 
-        //robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        //robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // Wait for the game to start (Display Gyro value), and reset gyro before we move..
-        /*while (!isStarted()) {
+        while (!isStarted()) {
+
             telemetry.addData(">", "Robot Heading = %d", gyro.getIntegratedZValue());
+            telemetry.addData("fileLocation", FtcRobotControllerActivity.instructionsPath);
+            telemetry.addData("right servo position", robot.rightPushServo.getPosition());
             telemetry.update();
             idle();
         }
         gyro.resetZAxisIntegrator();
-        */
+
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
         // Put a hold after each turn
 
         // Start instruction interpreting
-        InstructionInterpreter interpreter = new InstructionInterpreter();
-        JsonInterpreter jsonInterpreter = new JsonInterpreter();
+        // InstructionInterpreter interpreter = new InstructionInterpreter();
+        //JsonInterpreter jsonInterpreter = new JsonInterpreter();
+        //if (FtcRobotControllerActivity.instructionsPath == null || FtcRobotControllerActivity.instructionsPath == "") {
+            // No
+          //  int x = 0/0;
+        //}
+        // interpreter.SetInstructions(jsonInterpreter.FromTxtFile(FtcRobotControllerActivity.instructionsPath));
 
-        interpreter.SetInstructions(jsonInterpreter.FromTxtFile("sample.json"));
-
-        while (opModeIsActive()) {
-            interpreter.ExecuteInstruction();
-        }
+        gyroTurn (TURN_SPEED, -69);
+        gyroDrive(0.5, 4000, 69);
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
     }
 
-
-    /**
-     *  Method to drive on a fixed compass bearing (angle), based on encoder counts.
-     *  Move will stop if either of these conditions occur:
-     *  1) Move gets to the desired position
-     *  2) Driver stops the opmode running.
-     *
-     * @param speed      Target speed for forward motion.  Should allow for _/- variance for adjusting heading
-     * @param distance   Distance (in inches) to move from current position.  Negative distance means move backwards.
-     * @param angle      Absolute Angle (in Degrees) relative to last gyro reset.
-     *                   0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
-     *                   If a relative angle is required, add/subtract from current heading.
-     */
     public void gyroDrive ( double speed,
                             double distance,
                             double angle) throws InterruptedException {
@@ -124,6 +122,7 @@ public class AutonomousOpMode extends LinearOpMode {
 
         // Ensure that the opmode is still active
         if (opModeIsActive()) {
+
             // Determine new target position, and pass to motor controller
             moveCounts = (int)(distance * COUNTS_PER_INCH);
             newLeftTarget = robot.leftMotor.getCurrentPosition() + moveCounts;
@@ -140,7 +139,6 @@ public class AutonomousOpMode extends LinearOpMode {
             speed = Range.clip(Math.abs(speed), 0.0, 1.0);
             robot.leftMotor.setPower(speed);
             robot.rightMotor.setPower(speed);
-
 
             // keep looping while we are still active, and BOTH motors are running.
             while (opModeIsActive() &&
@@ -260,7 +258,7 @@ public class AutonomousOpMode extends LinearOpMode {
         double leftSpeed;
         double rightSpeed;
 
-        // determine turn speed based on +/- error
+        // determine turn power based on +/- error
         error = getError(angle);
 
         if (Math.abs(error) <= HEADING_THRESHOLD) {

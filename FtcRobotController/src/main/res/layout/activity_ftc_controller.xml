@@ -175,6 +175,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       android:visibility="invisible"
       android:text="" />
 
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textPersonName"
+        android:text="Path"
+        android:ems="10"
+        android:id="@+id/editText"
+        android:layout_marginBottom="137dp"
+        android:imeOptions="actionDone"
+        android:layout_above="@+id/textGamepad1"
+        android:layout_centerHorizontal="true" />
+
   </RelativeLayout>
 
   <WebView

@@ -10,4 +10,6 @@ public class MatchDetails {
         BLUE,
         RED
     }
+    public static String pathToInstructions;
+
 }

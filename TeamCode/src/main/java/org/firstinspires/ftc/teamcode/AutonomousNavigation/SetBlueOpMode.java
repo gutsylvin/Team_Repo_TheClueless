@@ -1,13 +1,7 @@
 package org.firstinspires.ftc.teamcode.AutonomousNavigation;
 
-import android.util.Log;
-
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.util.RobotLog;
-
-import org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.JsonInterpreter;
-import org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.MovementInstruction;
 
 /**
  * Created by hsunx on 10/22/2016.

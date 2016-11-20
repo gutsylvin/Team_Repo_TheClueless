@@ -32,9 +32,13 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode.AutonomousNavigation;
 
+import com.qualcomm.hardware.logitech.LogitechGamepadF310;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.exception.RobotCoreException;
+import com.qualcomm.robotcore.hardware.Gamepad;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
@@ -60,13 +64,30 @@ import org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot;
 public class TankTeleop extends OpMode{
 
     /* Declare OpMode members. */
-    Robot robot       = new Robot(); // use the class created to define a Pushbot's hardware could also use HardwarePushbotMatrix class
+    Robot robot       = new Robot(); // use the class created to define a Robot's hardware class
 
+    // Assuming HS-485HB servo
+    final float ENDPOINT = 230/255;
+    final float PUSH = ENDPOINT/2;
 
-    final double    CLAW_SPEED      = 0.02 ;
-    double          clawOffset      = 0;
-    double          leftPusherOffset    = 0f;
-    double          rightPusherOffset   = 1f;
+    final float SCISSORLIFT_SERVO_DOWN = 200/255;
+
+    boolean leftBeacon = false;
+    boolean rightBeacon = false;
+
+    boolean sweeper = false;
+
+    boolean shooting = false;
+
+    boolean conveyor = false;
+
+    Gamepad previousGamepad1;
+    Gamepad previousGamepad2;
+
+    double timeOfLastTap;
+
+    double sweeperSpeed = 1;
+
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -76,6 +97,9 @@ public class TankTeleop extends OpMode{
          * The init() method of the hardware class does all the work here
          */
         robot.init(hardwareMap, telemetry);
+
+        previousGamepad1 = new Gamepad();
+        previousGamepad2 = new Gamepad();
 
         // Send telemetry message to signify robot waiting;
         telemetry.addData("Say", "Hello Driver");    //
@@ -87,6 +111,10 @@ public class TankTeleop extends OpMode{
      */
     @Override
     public void init_loop() {
+        robot.rightScissorliftServo.setPosition(0);
+        robot.leftScissorliftServo.setPosition(0);
+        robot.leftPushServo.setPosition(0);
+        robot.rightPushServo.setPosition(0);
     }
 
     /*
@@ -94,6 +122,7 @@ public class TankTeleop extends OpMode{
      */
     @Override
     public void start() {
+
     }
 
     /*
@@ -111,47 +140,94 @@ public class TankTeleop extends OpMode{
         robot.leftMotor.setPower(left);
         robot.rightMotor.setPower(right);
 
-        // Use gamepad left & right Bumpers to open and close the claw
-        if (gamepad1.right_bumper)
-            clawOffset += CLAW_SPEED;
-        else if (gamepad1.left_bumper)
-            clawOffset -= CLAW_SPEED;
-
-        if (gamepad2.right_bumper)
-            rightPusherOffset += CLAW_SPEED;
-        else if (gamepad2.left_bumper)
-            rightPusherOffset -= CLAW_SPEED;
-
-        if (gamepad2.x)
-            leftPusherOffset += CLAW_SPEED;
-        else if (gamepad2.y)
-            leftPusherOffset -= CLAW_SPEED;
-
-        // Move both servos to new position.  Assume servos are mirror image of each other.
-        clawOffset = Range.clip(clawOffset, 0, 1);
-        robot.leftScissorliftServo.setPosition(clawOffset);
-        robot.rightScissorliftServo.setPosition(clawOffset);
-
-        leftPusherOffset = Range.clip(leftPusherOffset, 0, 1);
-        robot.leftPushServo.setPosition(leftPusherOffset);
-
-        rightPusherOffset = Range.clip(rightPusherOffset, 0, 1);
-        robot.rightPushServo.setPosition(rightPusherOffset);
-
+        // Beacon pushers
         if (gamepad1.a) {
-            robot.scissorliftMotor.setPower(-1.0f);
+            if (previousGamepad1 != null) {
+                if (!previousGamepad1.a) {
+                    leftBeacon = !leftBeacon;
+                }
+            }
         }
-        else if (gamepad1.b) {
-            robot.scissorliftMotor.setPower(1.0f);
+        if (gamepad1.b) {
+            if (previousGamepad1 != null) {
+                if (!previousGamepad1.b) {
+                    rightBeacon = !rightBeacon;
+                }
+            }
         }
-        else {
-            robot.scissorliftMotor.setPower(0f);
+
+        // Double tap to activate scissor lift servos
+        if (gamepad1.x && previousGamepad1 != null) {
+            if (previousGamepad1.x) {
+                if ((robot.timer.milliseconds() - timeOfLastTap) < 1.25 * 1000) {
+                    robot.leftScissorliftServo.setPosition(0.825);
+                    robot.rightScissorliftServo.setPosition(0.95);
+                }
+                timeOfLastTap = robot.timer.milliseconds();
+            }
+        }
+
+        // TODO "Arm Releasers"
+
+        // Sweeper toggle
+        if (gamepad2.a) {
+            if (previousGamepad2 != null)
+            {
+                if (!previousGamepad2.a) {
+                    sweeper = !sweeper;
+                }
+            }
+        }
+
+        // Shooter toggle
+        if (gamepad2.b) {
+            if (previousGamepad2 != null)
+            {
+                if (!previousGamepad2.b) {
+                    shooting = !shooting;
+                }
+            }
+        }
+
+        if (gamepad2.x) {
+            if (previousGamepad2 != null)
+            {
+                if (!previousGamepad2.x) {
+                    conveyor = !conveyor;
+                }
+            }
+        }
+
+        float scissorLift = -gamepad2.left_stick_y;
+
+        robot.scissorliftMotor.setPower(scissorLift);
+
+        robot.leftPushServo.setPosition(leftBeacon ? 0.425 : 0);
+        robot.rightPushServo.setPosition(rightBeacon ? 0.5 : 0);
+
+        robot.ballCollectionMotor.setPower(sweeper ? sweeperSpeed : 0);
+
+        if (robot.leftShootMotor == null || robot.rightShootMotor == null) {
+            telemetry.addData("fuck", "fuck");
+        }
+
+        robot.leftShootMotor.setPower(shooting ? 1 : 0);
+        robot.rightShootMotor.setPower(shooting ? 1 : 0);
+
+        // robot.conveyorMotor.setPower(conveyor ? 1 : 0);
+        try {
+            previousGamepad1.copy(gamepad1);
+            previousGamepad2.copy(gamepad2);
+        }
+        catch (Exception exception) {
+            telemetry.addData("gamepad error", exception.getMessage());
         }
 
         telemetry.addData("left joystick", left);
         telemetry.addData("right joystick", right);
         telemetry.addData("left motor", robot.leftMotor.getPower());
         telemetry.addData("right motor", robot.rightMotor.getPower());
+        telemetry.addData("beacon", "left: " + leftBeacon + " right: " + rightBeacon);
         updateTelemetry(telemetry);
     }
 

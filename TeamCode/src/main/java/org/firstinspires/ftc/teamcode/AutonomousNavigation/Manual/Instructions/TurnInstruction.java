@@ -1,7 +1,9 @@
-package org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual;
+package org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.Instructions;
 
 import com.google.gson.annotations.Expose;
 import com.qualcomm.robotcore.util.Range;
+
+import org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.Instructions.Instruction;
 
 /**
  * Created by Josh on 10/30/2016.
@@ -26,11 +28,6 @@ public class TurnInstruction extends Instruction {
     @Override
     public void Init() {
         super.Init();
-    }
-
-    @Override
-    public void Finished() {
-        finished = true;
     }
 
     boolean onHeading(double speed, double angle, double PCoeff) {
