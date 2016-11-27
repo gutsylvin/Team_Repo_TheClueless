@@ -26,18 +26,19 @@ public class AutonomousOpMode extends LinearOpMode {
     ModernRoboticsI2cGyro gyro    = null;                    // Additional Gyro device
 
     static final double     COUNTS_PER_MOTOR_REV    = 1440 ;    // eg: TETRIX Motor Encoder
-    static final double     DRIVE_GEAR_REDUCTION    = 2.0 ;     // This is < 1.0 if geared UP
+    static final double     DRIVE_GEAR_REDUCTION    = 0.5 ;     // This is < 1.0 if geared UP
     static final double     WHEEL_DIAMETER_INCHES   = 4.0 ;     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
 
     // These constants define the desired driving/control characteristics
     // The can/should be tweaked to suite the specific robot drive train.
-    static final double     TURN_SPEED              = 0.5;     // Nominal half speed for better accuracy.
+    static final double     TURN_SPEED              = 0.25;     // Nominal half speed for better accuracy.
 
-    static final double     HEADING_THRESHOLD       = 1 ;      // As tight as we can make it with an integer gyro
-    static final double     P_TURN_COEFF            = 0.1;     // Larger is more responsive, but also less stable
+    static final double     HEADING_THRESHOLD       = 2.5 ;      // As tight as we can make it with an integer gyro
+    static final double     P_TURN_COEFF            = 0.05;     // Larger is more responsive, but also less stable
     static final double     P_DRIVE_COEFF           = 0.15;     // Larger is more responsive, but also less stable
+    static final double     P_LINE_COEFF            = 0.15;
 
 
     @Override
@@ -100,12 +101,76 @@ public class AutonomousOpMode extends LinearOpMode {
         //}
         // interpreter.SetInstructions(jsonInterpreter.FromTxtFile(FtcRobotControllerActivity.instructionsPath));
 
-        gyroTurn (TURN_SPEED, -69);
-        gyroDrive(0.5, 4000, 69);
+        // TODO Add shooting at beginning of autonomous
+
+
+        prepareShoot(true);
+        robot.waitForTick(4000);
+        prepareShoot(false);
+        gyroDrive(0.25, 24, 0);
+        gyroTurn(TURN_SPEED, 45);
+        gyroDrive(0.25, 34, 45);
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
     }
+
+    void prepareShoot(boolean shooting) {
+        robot.conveyorMotor.setPower(shooting ? 1 : 0);
+        robot.shoot(shooting);
+    }
+
+    void playSoundFile () {
+
+    }
+
+    /**
+     * Method to follow a line of the specified reflectivity. Suggested that you
+     * calibrate the Optical Distance Sensor first
+     *
+     * @param speed Target speed for motion.
+     * @param distance Distance to move in encoder counts
+     * @param target Target reflectivity for the Optical Distance Sensor. Between 0.0 and 1.0
+     *
+     */
+
+    public void followLine ( double speed,
+                             double distance,
+                             double target) throws InterruptedException {
+
+        if (opModeIsActive()) {
+            int moveCount = (int)(distance * COUNTS_PER_INCH);
+            while (opModeIsActive() && robot.leftMotor.getCurrentPosition() < moveCount && robot.rightMotor.getCurrentPosition() < moveCount) {
+                double error = (target - robot.opticalDistanceSensor.getLightDetected()) * P_LINE_COEFF;
+
+                double leftPower = speed;
+                double rightPower = speed;
+
+                if (error < 0) {
+                    leftPower -= error;
+                } else {
+                    rightPower -= error;
+                }
+
+                robot.leftMotor.setPower(leftPower);
+                robot.rightMotor.setPower(rightPower);
+            }
+        }
+
+    }
+
+    /**
+     *  Method to drive on a fixed compass bearing (angle), based on encoder counts.
+     *  Move will stop if either of these conditions occur:
+     *  1) Move gets to the desired position
+     *  2) Driver stops the opmode running.
+     *
+     * @param speed      Target speed for forward motion.  Should allow for _/- variance for adjusting heading
+     * @param distance   Distance (in inches) to move from current position.  Negative distance means move backwards.
+     * @param angle      Absolute Angle (in Degrees) relative to last gyro reset.
+     *                   0 = fwd. +ve is CCW from fwd. -ve is CW from forward. wtf why
+     *                   If a relative angle is required, add/subtract from current heading.
+     */
 
     public void gyroDrive ( double speed,
                             double distance,

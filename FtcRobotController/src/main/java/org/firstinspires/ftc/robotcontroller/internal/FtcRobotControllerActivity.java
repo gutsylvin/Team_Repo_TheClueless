@@ -40,11 +40,13 @@ import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
+import android.media.MediaPlayer;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -52,6 +54,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.webkit.WebView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -128,6 +131,7 @@ public class FtcRobotControllerActivity extends Activity {
   protected TextView[] textGamepad = new TextView[NUM_GAMEPADS];
   protected TextView textOpMode;
   protected TextView textErrorMessage;
+  protected Button button;
   protected ImmersiveMode immersion;
 
   protected EditText editFile;
@@ -141,6 +145,9 @@ public class FtcRobotControllerActivity extends Activity {
 
   protected FtcEventLoop eventLoop;
   protected Queue<UsbDevice> receivedUsbAttachmentNotifications;
+
+  MediaPlayer rickroll;
+  int length;
 
   protected class RobotRestarter implements Restarter {
 
@@ -204,6 +211,8 @@ public class FtcRobotControllerActivity extends Activity {
     super.onCreate(savedInstanceState);
     RobotLog.vv(TAG, "onCreate()");
 
+
+
     receivedUsbAttachmentNotifications = new ConcurrentLinkedQueue<UsbDevice>();
     eventLoop = null;
 
@@ -241,7 +250,7 @@ public class FtcRobotControllerActivity extends Activity {
     textErrorMessage = (TextView) findViewById(R.id.textErrorMessage);
     textGamepad[0] = (TextView) findViewById(R.id.textGamepad1);
     textGamepad[1] = (TextView) findViewById(R.id.textGamepad2);
-
+    button = (Button) findViewById(R.id.rickroll_button);
     editFile = (EditText) findViewById(R.id.editText);
     editFile.setOnEditorActionListener(new TextView.OnEditorActionListener() {
       @Override
@@ -258,6 +267,21 @@ public class FtcRobotControllerActivity extends Activity {
             handled = true;
           }
           return handled;
+      }
+    });
+
+    rickroll = MediaPlayer.create(this, R.raw.rickroll);
+    rickroll.setLooping(true);
+
+    button.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        if (rickroll.isPlaying()) {
+          rickroll.pause();
+        }
+        else {
+          rickroll.start();
+        }
       }
     });
 

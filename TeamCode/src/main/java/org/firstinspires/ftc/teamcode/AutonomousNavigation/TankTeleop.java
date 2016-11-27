@@ -37,6 +37,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.exception.RobotCoreException;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
@@ -72,21 +73,23 @@ public class TankTeleop extends OpMode{
 
     final float SCISSORLIFT_SERVO_DOWN = 200/255;
 
-    boolean leftBeacon = false;
-    boolean rightBeacon = false;
+    private boolean leftBeacon = false;
+    private boolean rightBeacon = false;
 
-    boolean sweeper = false;
+    private boolean sweeper = false;
 
-    boolean shooting = false;
+    private boolean shooting = false;
 
-    boolean conveyor = false;
+    private boolean conveyor = false;
 
-    Gamepad previousGamepad1;
-    Gamepad previousGamepad2;
+    private Gamepad previousGamepad1;
+    private Gamepad previousGamepad2;
 
-    double timeOfLastTap;
+    private double timeOfLastTap;
 
-    double sweeperSpeed = 1;
+    private double sweeperSpeed = -1;
+
+    private boolean firstLoop = true;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -111,10 +114,10 @@ public class TankTeleop extends OpMode{
      */
     @Override
     public void init_loop() {
-        robot.rightScissorliftServo.setPosition(0);
+        robot.rightScissorliftServo.setPosition(0.902); // 230/255
         robot.leftScissorliftServo.setPosition(0);
         robot.leftPushServo.setPosition(0);
-        robot.rightPushServo.setPosition(0);
+        robot.rightPushServo.setPosition(0.961); // 245/255
     }
 
     /*
@@ -122,7 +125,10 @@ public class TankTeleop extends OpMode{
      */
     @Override
     public void start() {
-
+        robot.rightScissorliftServo.setPosition(0.902); // 230/255
+        robot.leftScissorliftServo.setPosition(0);
+        robot.leftPushServo.setPosition(0);
+        robot.rightPushServo.setPosition(0.961); // 245/255
     }
 
     /*
@@ -130,6 +136,15 @@ public class TankTeleop extends OpMode{
      */
     @Override
     public void loop() {
+        if (firstLoop) {
+            firstLoop = false;
+            robot.rightScissorliftServo.setPosition(0.902); // 230/255
+            robot.leftScissorliftServo.setPosition(0);
+            robot.leftPushServo.setPosition(0);
+            robot.rightPushServo.setPosition(0.961); // 245/255
+        }
+
+
         double left;
         double right;
 
@@ -156,12 +171,20 @@ public class TankTeleop extends OpMode{
             }
         }
 
+        if (gamepad1.left_bumper) {
+            if (previousGamepad1 != null) {
+                if (!previousGamepad1.left_bumper) {
+                    ReverseMotors();
+                }
+            }
+        }
+
         // Double tap to activate scissor lift servos
         if (gamepad1.x && previousGamepad1 != null) {
             if (previousGamepad1.x) {
                 if ((robot.timer.milliseconds() - timeOfLastTap) < 1.25 * 1000) {
-                    robot.leftScissorliftServo.setPosition(0.825);
-                    robot.rightScissorliftServo.setPosition(0.95);
+                    robot.leftScissorliftServo.setPosition(0.843); // 215/255
+                    robot.rightScissorliftServo.setPosition(0.059); // 15/255
                 }
                 timeOfLastTap = robot.timer.milliseconds();
             }
@@ -202,19 +225,19 @@ public class TankTeleop extends OpMode{
 
         robot.scissorliftMotor.setPower(scissorLift);
 
-        robot.leftPushServo.setPosition(leftBeacon ? 0.425 : 0);
-        robot.rightPushServo.setPosition(rightBeacon ? 0.5 : 0);
+        robot.leftPushServo.setPosition(leftBeacon ? 0.431 /*110/255*/ : 0);
+        robot.rightPushServo.setPosition(rightBeacon ? 0.5 : 0.961/*245/255*/);
 
         robot.ballCollectionMotor.setPower(sweeper ? sweeperSpeed : 0);
 
+        // TODO does this even do anything
         if (robot.leftShootMotor == null || robot.rightShootMotor == null) {
             telemetry.addData("fuck", "fuck");
         }
 
-        robot.leftShootMotor.setPower(shooting ? 1 : 0);
-        robot.rightShootMotor.setPower(shooting ? 1 : 0);
+        robot.shoot(shooting);
 
-        // robot.conveyorMotor.setPower(conveyor ? 1 : 0);
+        robot.conveyorMotor.setPower(conveyor ? 1 : 0);
         try {
             previousGamepad1.copy(gamepad1);
             previousGamepad2.copy(gamepad2);
@@ -228,6 +251,10 @@ public class TankTeleop extends OpMode{
         telemetry.addData("left motor", robot.leftMotor.getPower());
         telemetry.addData("right motor", robot.rightMotor.getPower());
         telemetry.addData("beacon", "left: " + leftBeacon + " right: " + rightBeacon);
+        telemetry.addData("left scissorlift servo", robot.leftScissorliftServo.getPosition());
+        telemetry.addData("right scissorlift servo", robot.rightScissorliftServo.getPosition());
+        telemetry.addData("left push", robot.leftPushServo.getPosition());
+        telemetry.addData("right push", robot.rightPushServo.getPosition());
         updateTelemetry(telemetry);
     }
 
@@ -235,7 +262,15 @@ public class TankTeleop extends OpMode{
      * Code to run ONCE after the driver hits STOP
      */
     @Override
-    public void stop() {
+    public void stop () {
     }
 
+    private void ReverseMotors () {
+        robot.leftMotor.setDirection(ReverseDirection(robot.leftMotor.getDirection()));
+        robot.rightMotor.setDirection(ReverseDirection(robot.rightMotor.getDirection()));
+    }
+
+    private DcMotorSimple.Direction ReverseDirection (DcMotorSimple.Direction direction) {
+        return direction == DcMotorSimple.Direction.FORWARD ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD;
+    }
 }

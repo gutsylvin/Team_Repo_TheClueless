@@ -45,6 +45,8 @@ public class Robot {
     // Hardware map
     public HardwareMap hwMap;
 
+    public boolean initialized;
+
     // TODO add "arm releasers"
 
     // region
@@ -87,8 +89,11 @@ public class Robot {
     public Servo leftPushServo;
     public Servo rightPushServo;
     // endregion
-    public double noPushLeft = 0;
-    public double noPushRight = 230/255;
+
+    // Some consts
+    public final double noPushLeft = 0;
+    public final double noPushRight = 230/255;
+    public final double shootSpeed = 0.75;
 
     public Robot () {
         // Set static instance to this. The other one will live on in memory and then get GC'ed
@@ -112,9 +117,9 @@ public class Robot {
         leftShootMotor = hardwareMap.dcMotor.get("left_shoot");
         rightShootMotor = hardwareMap.dcMotor.get("right_shoot");
 
-        rightShootMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftShootMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        // conveyorMotor = hardwareMap.dcMotor.get("conveyor");
+        conveyorMotor = hardwareMap.dcMotor.get("conveyor");
 
         ballCollectionMotor = hardwareMap.dcMotor.get("ball_collector");
 
@@ -125,15 +130,8 @@ public class Robot {
         leftScissorliftServo = hardwareMap.servo.get("left_scissorlift_servo");
         rightScissorliftServo = hardwareMap.servo.get("right_scissorlift_servo");
 
-        rightScissorliftServo.setDirection(Servo.Direction.REVERSE);
-
         leftPushServo = hardwareMap.servo.get("left_push");
         rightPushServo = hardwareMap.servo.get("right_push");
-
-        rightPushServo.setDirection(Servo.Direction.REVERSE);
-
-        leftPushServo.setPosition(noPushLeft);
-        rightPushServo.setPosition(noPushRight);
 
         // Init sensors
         gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
@@ -141,6 +139,8 @@ public class Robot {
         opticalDistanceSensor = ((ModernRoboticsAnalogOpticalDistanceSensor) hardwareMap.opticalDistanceSensor.get("ods"));
 
         colorSensor = ((ModernRoboticsI2cColorSensor) hardwareMap.colorSensor.get("color_sensor"));
+
+        initialized = true;
 
     }
     public void waitForTick(long periodMs) throws InterruptedException {
@@ -152,5 +152,12 @@ public class Robot {
 
         // Reset the cycle clock for the next pass.
         timer.reset();
+    }
+
+    public void shoot (boolean shooting) {
+        if (initialized) {
+            robot.leftShootMotor.setPower(shooting ? shootSpeed : 0);
+            robot.rightShootMotor.setPower(shooting ? shootSpeed : 0);
+        }
     }
 }

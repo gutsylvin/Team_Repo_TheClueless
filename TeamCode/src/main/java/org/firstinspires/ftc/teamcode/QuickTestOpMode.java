@@ -23,12 +23,20 @@ public class QuickTestOpMode extends OpMode {
     ModernRoboticsDigitalTouchSensor touchSensor;
     ModernRoboticsI2cColorSensor colorSensor;
     ModernRoboticsAnalogOpticalDistanceSensor ods;
+    Servo servo;
+
+    double servoPosition;
+    double servoSpeed = 0.02;
+
+    boolean clockwise = true;
 
     @Override
     public void init() {
-        colorSensor = ((ModernRoboticsI2cColorSensor) hardwareMap.colorSensor.get("color_sensor"));
-        touchSensor = ((ModernRoboticsDigitalTouchSensor) hardwareMap.touchSensor.get("touch_sensor"));
-        ods = ((ModernRoboticsAnalogOpticalDistanceSensor) hardwareMap.opticalDistanceSensor.get("ods"));
+        // colorSensor = ((ModernRoboticsI2cColorSensor) hardwareMap.colorSensor.get("color_sensor"));
+        // touchSensor = ((ModernRoboticsDigitalTouchSensor) hardwareMap.touchSensor.get("touch_sensor"));
+        // ods = ((ModernRoboticsAnalogOpticalDistanceSensor) hardwareMap.opticalDistanceSensor.get("ods"));
+
+        servo = hardwareMap.servo.get("servo");
     }
 
     @Override
@@ -38,13 +46,33 @@ public class QuickTestOpMode extends OpMode {
 
     @Override
     public void loop() {
-        colorSensor.enableLed(touchSensor.isPressed());
-        telemetry.addData("touch", touchSensor.isPressed());
-        telemetry.addData("red", colorSensor.red());
-        telemetry.addData("green", colorSensor.green());
-        telemetry.addData("blue", colorSensor.blue());
-        telemetry.addData("alpha", colorSensor.alpha());
-        telemetry.addData("ods reflect", ods.getLightDetected() + ", raw: " + ods.getRawLightDetected());
+        // colorSensor.enableLed(touchSensor.isPressed());
+        // telemetry.addData("touch", touchSensor.isPressed());
+        // telemetry.addData("red", colorSensor.red());
+        // telemetry.addData("green", colorSensor.green());
+        // telemetry.addData("blue", colorSensor.blue());
+        // telemetry.addData("alpha", colorSensor.alpha());
+        // telemetry.addData("ods reflect", ods.getLightDetected() + ", raw: " + ods.getRawLightDetected());
+
+        if (clockwise) {
+            if (servo.getPosition() >= 1) {
+                clockwise = false;
+            }
+            else {
+                servoPosition += servoSpeed;
+                servo.setPosition(servoPosition);
+            }
+        }
+        else {
+            if (servo.getPosition() <= 0) {
+                clockwise = true;
+            }
+            else {
+                servoPosition -= servoSpeed;
+                servo.setPosition(servoPosition);
+            }
+        }
+
     }
 
     @Override
