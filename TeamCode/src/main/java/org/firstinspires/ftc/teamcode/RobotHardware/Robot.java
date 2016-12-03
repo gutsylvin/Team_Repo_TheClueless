@@ -53,7 +53,7 @@ public class Robot {
     // Modern Robotic Gyro
     public ModernRoboticsI2cGyro gyro;
 
-    public ModernRoboticsAnalogOpticalDistanceSensor opticalDistanceSensor;
+    public OpticalDistanceSensor opticalDistanceSensor;
 
     public ModernRoboticsI2cColorSensor colorSensor;
     // endregion
@@ -88,6 +88,9 @@ public class Robot {
     // Button pushing servos
     public Servo leftPushServo;
     public Servo rightPushServo;
+
+    public Servo conveyorGate;
+    public Servo armReleasers;
     // endregion
 
     // Some consts
@@ -133,10 +136,13 @@ public class Robot {
         leftPushServo = hardwareMap.servo.get("left_push");
         rightPushServo = hardwareMap.servo.get("right_push");
 
+        conveyorGate = hardwareMap.servo.get("gate");
+
+        armReleasers = hardwareMap.servo.get("arm_releasers");
         // Init sensors
         gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
 
-        opticalDistanceSensor = ((ModernRoboticsAnalogOpticalDistanceSensor) hardwareMap.opticalDistanceSensor.get("ods"));
+        opticalDistanceSensor = (hardwareMap.opticalDistanceSensor.get("ods"));
 
         colorSensor = ((ModernRoboticsI2cColorSensor) hardwareMap.colorSensor.get("color_sensor"));
 

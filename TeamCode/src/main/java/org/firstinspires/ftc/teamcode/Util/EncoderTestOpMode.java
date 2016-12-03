@@ -62,12 +62,17 @@ public class EncoderTestOpMode extends OpMode {
     @Override
     public void init() {
         telemetry.addData("Status", "Initialized");
-        voltageSensor = new Voltage(hardwareMap);
+
 
         motors = new ArrayList<>();
         Iterator<DcMotor> iterator = hardwareMap.dcMotor.iterator();
         for (int i = 0; i < hardwareMap.dcMotor.size(); i++) {
             motors.add(iterator.next());
+        }
+
+        for (DcMotor motor : motors) {
+            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         }
     }
 
@@ -77,6 +82,10 @@ public class EncoderTestOpMode extends OpMode {
        */
     @Override
     public void init_loop() {
+        for (DcMotor motor : motors) {
+            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
     }
 
     /*
@@ -94,7 +103,6 @@ public class EncoderTestOpMode extends OpMode {
      */
     @Override
     public void loop() {
-        telemetry.addData("Battery voltage", voltageSensor.getVoltage());
         for (DcMotor motor: motors) {
             telemetry.addData("Encoder Count - " + motor.getDeviceName(), motor.getCurrentPosition());
         }

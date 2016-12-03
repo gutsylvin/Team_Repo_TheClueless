@@ -49,38 +49,44 @@ import org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot;
 /**
  * This file provides basic Telop driving for a Pushbot robot.
  * The code is structured as an Iterative OpMode
- *
+ * <p>
  * This OpMode uses the common Pushbot hardware class to define the devices on the robot.
  * All device access is managed through the HardwarePushbot class.
- *
+ * <p>
  * This particular OpMode executes a basic Tank Drive Teleop for a PushBot
  * It raises and lowers the claw using the Gampad Y and A buttons respectively.
  * It also opens and closes the claws slowly using the left and right Bumper buttons.
- *
+ * <p>
  * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Pushbot: Teleop Tank", group="TeleOp")
-public class TankTeleop extends OpMode{
+@TeleOp(name = "Pushbot: Teleop Tank", group = "TeleOp")
+public class TankTeleop extends OpMode {
 
     /* Declare OpMode members. */
-    Robot robot       = new Robot(); // use the class created to define a Robot's hardware class
+    Robot robot = new Robot(); // use the class created to define a Robot's hardware class
 
     // Assuming HS-485HB servo
-    final float ENDPOINT = 230/255;
-    final float PUSH = ENDPOINT/2;
+    final float ENDPOINT = 230 / 255;
+    final float PUSH = ENDPOINT / 2;
 
-    final float SCISSORLIFT_SERVO_DOWN = 200/255;
+    final float SCISSORLIFT_SERVO_DOWN = 200 / 255;
 
     private boolean leftBeacon = false;
     private boolean rightBeacon = false;
+
+    private boolean scissorliftServos = false;
 
     private boolean sweeper = false;
 
     private boolean shooting = false;
 
     private boolean conveyor = false;
+
+    private boolean conveyorGate = false;
+
+    private boolean armReleasers = false;
 
     private Gamepad previousGamepad1;
     private Gamepad previousGamepad2;
@@ -142,8 +148,14 @@ public class TankTeleop extends OpMode{
             robot.leftScissorliftServo.setPosition(0);
             robot.leftPushServo.setPosition(0);
             robot.rightPushServo.setPosition(0.961); // 245/255
+            try {
+                previousGamepad1.copy(gamepad1);
+                previousGamepad2.copy(gamepad2);
+            } catch (RobotCoreException e) {
+                telemetry.addData("ERROR", e.toString());
+            }
+            return;
         }
-
 
         double left;
         double right;
@@ -155,69 +167,68 @@ public class TankTeleop extends OpMode{
         robot.leftMotor.setPower(left);
         robot.rightMotor.setPower(right);
 
-        // Beacon pushers
-        if (gamepad1.a) {
-            if (previousGamepad1 != null) {
-                if (!previousGamepad1.a) {
-                    leftBeacon = !leftBeacon;
-                }
+        if (gamepad1.y) {
+            if (!previousGamepad1.y) {
+                armReleasers = !armReleasers;
             }
         }
+        // Beacon pushers
+        if (gamepad1.x) {
+            if (!previousGamepad1.x) {
+                leftBeacon = !leftBeacon;
+            }
+
+        }
         if (gamepad1.b) {
-            if (previousGamepad1 != null) {
-                if (!previousGamepad1.b) {
-                    rightBeacon = !rightBeacon;
-                }
+            if (!previousGamepad1.b) {
+                rightBeacon = !rightBeacon;
             }
         }
 
         if (gamepad1.left_bumper) {
-            if (previousGamepad1 != null) {
-                if (!previousGamepad1.left_bumper) {
-                    ReverseMotors();
-                }
+            if (!previousGamepad1.left_bumper) {
+                ReverseMotors();
             }
         }
 
         // Double tap to activate scissor lift servos
-        if (gamepad1.x && previousGamepad1 != null) {
-            if (previousGamepad1.x) {
-                if ((robot.timer.milliseconds() - timeOfLastTap) < 1.25 * 1000) {
-                    robot.leftScissorliftServo.setPosition(0.843); // 215/255
-                    robot.rightScissorliftServo.setPosition(0.059); // 15/255
-                }
-                timeOfLastTap = robot.timer.milliseconds();
+        if (gamepad1.y) {
+            if (!previousGamepad1.y) {
+                scissorliftServos = !scissorliftServos;
             }
         }
 
-        // TODO "Arm Releasers"
-
         // Sweeper toggle
         if (gamepad2.a) {
-            if (previousGamepad2 != null)
-            {
-                if (!previousGamepad2.a) {
-                    sweeper = !sweeper;
-                }
+            if (!previousGamepad2.a) {
+                sweeper = !sweeper;
             }
         }
 
         // Shooter toggle
-        if (gamepad2.b) {
-            if (previousGamepad2 != null)
-            {
-                if (!previousGamepad2.b) {
-                    shooting = !shooting;
-                }
+        if (gamepad2.left_bumper) {
+            if (!previousGamepad2.left_bumper) {
+                shooting = !shooting;
             }
         }
 
         if (gamepad2.x) {
-            if (previousGamepad2 != null)
-            {
-                if (!previousGamepad2.x) {
-                    conveyor = !conveyor;
-                }
+            if (!previousGamepad2.x) {
+                conveyor = !conveyor;
+            }
+        }
+
+        if (gamepad2.right_bumper) {
+            if (!previousGamepad2.right_bumper) {
+                conveyorGate = !conveyorGate;
+            }
+        }
+
+        if (gamepad2.y) {
+            if (!previousGamepad2.y) {
+                shooting = false;
+                conveyor = false;
+                sweeper = false;
             }
         }
 
@@ -228,7 +239,14 @@ public class TankTeleop extends OpMode{
         robot.leftPushServo.setPosition(leftBeacon ? 0.431 /*110/255*/ : 0);
         robot.rightPushServo.setPosition(rightBeacon ? 0.5 : 0.961/*245/255*/);
 
+        robot.leftScissorliftServo.setPosition(scissorliftServos ? 0.843 : 0); // 215/255
+        robot.rightScissorliftServo.setPosition(scissorliftServos ? 0.059 : 0.902); // 15/255
+
         robot.ballCollectionMotor.setPower(sweeper ? sweeperSpeed : 0);
+
+        robot.conveyorGate.setPosition(conveyorGate ? 0 : 1);
+
+        robot.armReleasers.setPosition(armReleasers ? 1 : 0);
 
         // TODO does this even do anything
         if (robot.leftShootMotor == null || robot.rightShootMotor == null) {
@@ -241,8 +259,7 @@ public class TankTeleop extends OpMode{
         try {
             previousGamepad1.copy(gamepad1);
             previousGamepad2.copy(gamepad2);
-        }
-        catch (Exception exception) {
+        } catch (Exception exception) {
             telemetry.addData("gamepad error", exception.getMessage());
         }
 
@@ -262,15 +279,15 @@ public class TankTeleop extends OpMode{
      * Code to run ONCE after the driver hits STOP
      */
     @Override
-    public void stop () {
+    public void stop() {
     }
 
-    private void ReverseMotors () {
+    private void ReverseMotors() {
         robot.leftMotor.setDirection(ReverseDirection(robot.leftMotor.getDirection()));
         robot.rightMotor.setDirection(ReverseDirection(robot.rightMotor.getDirection()));
     }
 
-    private DcMotorSimple.Direction ReverseDirection (DcMotorSimple.Direction direction) {
+    private DcMotorSimple.Direction ReverseDirection(DcMotorSimple.Direction direction) {
         return direction == DcMotorSimple.Direction.FORWARD ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD;
     }
 }
