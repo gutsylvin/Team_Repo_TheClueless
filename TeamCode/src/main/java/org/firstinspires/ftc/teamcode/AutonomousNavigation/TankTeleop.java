@@ -39,6 +39,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
+import org.firstinspires.ftc.teamcode.Util.ServoToggle;
+import org.firstinspires.ftc.teamcode.Util.Toggle;
 
 /**
  * This file provides basic Telop driving for a Pushbot robot.
@@ -161,8 +163,11 @@ public class TankTeleop extends OpMode {
         robot.leftMotor.setPower(left);
         robot.rightMotor.setPower(right);
 
-        if (gamepad1.y) {
-            if (!previousGamepad1.y) {
+        //Toggle[] toggles = {new ServoToggle(Toggle.Button.Y, robot.armReleasers, new double[]{0, 1}, Toggle.GamepadId.User1),
+        //                    new ServoToggle(Toggle.Button.X, robot.leftPushServo)};
+
+        if (gamepad1.right_bumper) {
+            if (!previousGamepad1.right_bumper) {
                 armReleasers = !armReleasers;
             }
         }
