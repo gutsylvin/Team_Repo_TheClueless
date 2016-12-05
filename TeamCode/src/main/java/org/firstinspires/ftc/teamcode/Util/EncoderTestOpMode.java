@@ -38,6 +38,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorImpl;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
 import org.lasarobotics.library.sensor.modernrobotics.Voltage;
 
 import java.text.SimpleDateFormat;
@@ -57,23 +58,19 @@ public class EncoderTestOpMode extends OpMode {
     private ElapsedTime runtime = new ElapsedTime();
     Voltage voltageSensor;
 
+    Robot robot = Robot.robot;
+
     ArrayList<DcMotor> motors;
 
     @Override
     public void init() {
         telemetry.addData("Status", "Initialized");
 
-
-        motors = new ArrayList<>();
-        Iterator<DcMotor> iterator = hardwareMap.dcMotor.iterator();
-        for (int i = 0; i < hardwareMap.dcMotor.size(); i++) {
-            motors.add(iterator.next());
-        }
-
-        for (DcMotor motor : motors) {
-            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        }
+        robot.gyro.resetZAxisIntegrator();
+        robot.leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     /*
@@ -82,10 +79,7 @@ public class EncoderTestOpMode extends OpMode {
        */
     @Override
     public void init_loop() {
-        for (DcMotor motor : motors) {
-            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
+
     }
 
     /*
@@ -103,8 +97,8 @@ public class EncoderTestOpMode extends OpMode {
      */
     @Override
     public void loop() {
-        for (DcMotor motor: motors) {
-            telemetry.addData("Encoder Count - " + motor.getDeviceName(), motor.getCurrentPosition());
-        }
+        telemetry.addData("left", robot.leftMotor.getCurrentPosition());
+        telemetry.addData("right", robot.rightMotor.getCurrentPosition());
+        telemetry.addData("gyro", robot.gyro.getHeading());
     }
 }
