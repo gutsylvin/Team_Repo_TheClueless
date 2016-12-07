@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
 import org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.InstructionInterpreter;
@@ -35,13 +36,13 @@ public class AutonomousOpMode extends LinearOpMode {
 
     // These constants define the desired driving/control characteristics
     // The can/should be tweaked to suite the specific robot drive train.
-    static final double TURN_SPEED = 0.1;     // Nominal half speed for better accuracy.
+    static final double TURN_SPEED = 0.2;     // Nominal half speed for better accuracy.
     static final double TURN_TIMEOUT = 5;
 
     static final double START_ENCODER = 200;    // Driving subroutines will use this encoder value as the "revving up" period
-    static final double END_ENCODER = 200;
+    static final double END_ENCODER = 500;
 
-    static final double HEADING_THRESHOLD = 4;      // As tight as we can make it with an integer gyro
+    static final double HEADING_THRESHOLD = 2;      // As tight as we can make it with an integer gyro
     static final double P_TURN_COEFF = 0.05;     // Larger is more responsive, but also less stable
     static final double P_DRIVE_COEFF = 0.20;     // Larger is more responsive, but also less stable
     static final double P_LINE_COEFF = 0.15;
@@ -79,6 +80,9 @@ public class AutonomousOpMode extends LinearOpMode {
         telemetry.addData(">", "Robot Ready.");    //
         telemetry.update();
 
+
+        robot.gyro.resetDeviceConfigurationForOpMode();
+        robot.gyro.setHeadingMode(ModernRoboticsI2cGyro.HeadingMode.HEADING_CARTESIAN);
         robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
@@ -94,13 +98,12 @@ public class AutonomousOpMode extends LinearOpMode {
             idle();
         }
 
-
+        robot.armReleasers.setPosition(0);
 
         robot.rightScissorliftServo.setPosition(0.902); // 230/255
         robot.leftScissorliftServo.setPosition(0);
         robot.leftPushServo.setPosition(0);
         robot.rightPushServo.setPosition(0.961); // 245/255
-        gyro.resetZAxisIntegrator();
 
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
@@ -108,16 +111,29 @@ public class AutonomousOpMode extends LinearOpMode {
 
         robot.conveyorGate.setPosition(0.863);
 
-        //shoot();
-        //prepareShoot(false);
+        shoot();
+        prepareShoot(false);
 
         int startLeftTurn;
         int startRightTurn;
         int endLeftTurn;
         int endRightTurn;
 
-        //encoderDrive(0.8, -1000, -1000, 8000);
-        encoderTurnTest(0.25, -180, 100000);
+        //encoderDrive(0.8, -400, -400, 8000);
+        //gyroTurn(TURN_SPEED, -130);
+        // localTurn(0.25, 127);
+        // encoderTurn(0.25, 1500);
+
+        //encoderDrive(0.5, 2000, 2000, 8000);
+
+        /*gyroDriveUntilLine(0.1, 0.6);
+        gyroTurn(TURN_SPEED, -90);
+        pushBeacon(0.75, -90);
+        encoderDrive(0.75, -400, -400, 3000);
+        gyroTurn(TURN_SPEED, -178);
+        encoderDrive(0.5, 2000, 2000, 5000);
+
+        /*encoderTurnTest(0.25, -180, 100000);
         encoderTurnTest(0.25, -150, 100000);
         encoderTurnTest(0.25, -120, 100000);
         encoderTurnTest(0.25, -90, 100000);
@@ -128,21 +144,29 @@ public class AutonomousOpMode extends LinearOpMode {
         encoderTurnTest(0.25, 90, 100000);
         encoderTurnTest(0.25, 120, 100000);
         encoderTurnTest(0.25, 150, 100000);
-        encoderTurnTest(0.25, 180, 100000);
-        //encoderDrive(0.25, 1100, -1100, 5000);
-        //encoderDrive(0.5, 2200, 2200, 8000);
-        //gyroDriveUntilLine(0.08, 0.45);
+        encoderTurnTest(0.25, 180, 100000);*/
 
-        /*gyroTurn(TURN_SPEED * 1.25, -90);
-        encoderDrive(0.5, 250, 250, 3000);
-        pushBeacon(0.5, -90);
+
+
+        encoderDrive(0.25, 0.75, 0.25, -500, -500, 5000);
+        Thread.sleep(125);
+        gyroTurn(TURN_SPEED * 0.7, -135);
+
+        encoderDrive(0.25, 0.75, 0.25, 3050, 2900, 8000);
+
+        gyroDriveUntilLine(0.15, 0.45);
+
+        gyroTurn(TURN_SPEED * 0.7, -90);
+        encoderDrive(0.5, 200, 200, 3000);
+        pushBeacon(0.45, -90);
         encoderDrive(0.7, -300, -300, 3000);
-        gyroTurn(TURN_SPEED * 1.25, -178);
-        encoderDrive(0.8, 2000, 2025, 10000);
-        gyroDriveUntilLine(0.08, 0.45);
-        gyroTurn(TURN_SPEED * 1.25, -90);
-        encoderDrive(0.7, 400, 400, 1000);
-        pushBeacon(0.5, -90);*/
+        gyroTurn(TURN_SPEED * 0.6, -178);
+        encoderDrive(0.5, 0.75, 0.5, 2150, 2150, 10000);
+        gyroDriveUntilLine(0.15, 0.45);
+        encoderDrive(0.25, -50, -50, 2000);
+        gyroTurn(TURN_SPEED * 0.7, -90);
+        encoderDrive(0.8, 500, 500, 1000);
+        pushBeacon(0.5, -90);
 
         /*encoderDrive(0.7, -300, -300, 1500);
         gyroTurn(TURN_SPEED, 45);
@@ -209,40 +233,38 @@ public class AutonomousOpMode extends LinearOpMode {
         robot.conveyorMotor.setPower(0);
     }
 
-    public void encoderTurnTest (double speed, double angle, double timeoutMs) throws InterruptedException{
-        boolean clockwise = angle - gyro.getHeading() > 0;
+    // positive turn for clockwise, negative for counterclockwise.
+    public void localTurn (double speed, double angle) throws InterruptedException{
+        int newLeftTarget;
+        int newRightTarget;
 
-        robot.gyro.calibrate();
-        while (robot.gyro.isCalibrating()) {
-            Thread.sleep(50);
-            idle();
-        }
+        boolean clockwise = (angle - robot.gyro.getHeading() < 0);
 
-        while (opModeIsActive() && (clockwise ? gyro.getHeading() > angle : gyro.getHeading() < angle)) {
-            robot.leftMotor.setPower((clockwise ? speed : -speed));
-            robot.rightMotor.setPower((clockwise ? -speed : speed));
+        robot.leftMotor.setPower(clockwise ? speed : -speed);
+        robot.rightMotor.setPower(clockwise ? -speed : speed);
 
-            telemetry.addData("left counts", robot.leftMotor.getCurrentPosition());
-            telemetry.addData("right counts", robot.rightMotor.getCurrentPosition());
+        while (opModeIsActive() && robot.gyro.getHeading() < angle) {
+            telemetry.addData("Gyro", gyro.getHeading());
             telemetry.update();
             idle();
         }
-        while (!gamepad1.a) {
-            telemetry.addData("left counts", robot.leftMotor.getCurrentPosition());
-            telemetry.addData("right counts", robot.rightMotor.getCurrentPosition());
-            telemetry.update();
-            idle();
-        }
+
+        robot.leftMotor.setPower(0);
+        robot.rightMotor.setPower(0);
+
+        robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     public void encoderDrive(double speed,
                              double left, double right,
                              double timeoutS) throws InterruptedException {
-        encoderDrive(speed, speed, left, right, timeoutS);
+        encoderDrive(speed, speed, speed, left, right, timeoutS);
     }
 
     public void encoderDrive(double speed,
                              double speed1,
+                             double speed2,
                              double left, double right,
                              double timeoutS) throws InterruptedException {
         int newLeftTarget;
@@ -267,6 +289,9 @@ public class AutonomousOpMode extends LinearOpMode {
             robot.leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             robot.rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
+            robot.leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            robot.leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
             // reset the timeout time and start motion.
             runtime.reset();
             robot.leftMotor.setPower(Math.abs(speed));
@@ -276,11 +301,15 @@ public class AutonomousOpMode extends LinearOpMode {
             while (opModeIsActive() &&
                     (runtime.seconds() < timeoutS) &&
                     (robot.leftMotor.isBusy() && robot.rightMotor.isBusy())) {
+
                 boolean pastStart = (Math.abs(robot.leftMotor.getCurrentPosition() - encoderStartLeft) > START_ENCODER
                         || Math.abs(robot.rightMotor.getCurrentPosition() - encoderStartRight) > START_ENCODER);
 
-                robot.leftMotor.setPower(Math.abs((pastStart ? speed1 : speed)));
-                robot.rightMotor.setPower(Math.abs((pastStart ? speed1 : speed)));
+                boolean pastEnd = (Math.abs(newLeftTarget - robot.leftMotor.getCurrentPosition()) < END_ENCODER
+                        || Math.abs(newRightTarget - robot.rightMotor.getCurrentPosition()) < END_ENCODER);
+
+                robot.leftMotor.setPower(Math.abs(pastEnd ? speed2 : (pastStart ? speed1 : speed)));
+                robot.rightMotor.setPower(Math.abs(pastEnd ? speed2 : (pastStart ? speed1 : speed)));
                 // Display it for the driver.
                 telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
                 telemetry.addData("Path2", "Running at %7d :%7d",
@@ -682,6 +711,10 @@ public class AutonomousOpMode extends LinearOpMode {
             }
             telemetry.addData("time", time);
             telemetry.addData("timeout", TURN_TIMEOUT * 1000);
+            telemetry.addData("left encoder", robot.leftMotor.getCurrentPosition());
+            telemetry.addData("right encoder", robot.rightMotor.getCurrentPosition());
+            RobotLog.i("left encoder : " + robot.leftMotor.getCurrentPosition());
+            RobotLog.i("right encoder : " + robot.rightMotor.getCurrentPosition());
             telemetry.addData("gyro", robot.gyro.getHeading());
             telemetry.update();
             idle();

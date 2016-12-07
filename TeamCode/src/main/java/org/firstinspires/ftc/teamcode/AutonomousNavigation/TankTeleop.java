@@ -169,8 +169,8 @@ public class TankTeleop extends OpMode {
         double right;
 
         // Run wheels in tank mode (note: The joystick goes negative when pushed forwards, so negate it)
-        left = (reverse ? 1 : -1) * gamepad1.left_stick_y;
-        right = (reverse ? 1 : -1) * gamepad1.right_stick_y;
+        left = (-1) * (reverse ? gamepad1.right_stick_y : gamepad1.left_stick_y);
+        right = (-1) * (reverse ? gamepad1.left_stick_y : gamepad1.right_stick_y);
 
         robot.leftMotor.setPower(left);
         robot.rightMotor.setPower(right);
@@ -206,7 +206,7 @@ public class TankTeleop extends OpMode {
         if (gamepad1.left_bumper) {
             if (!previousGamepad1.left_bumper) {
                 ReverseMotors();
-                reverse = true;
+                reverse = !reverse;
             }
         }
 

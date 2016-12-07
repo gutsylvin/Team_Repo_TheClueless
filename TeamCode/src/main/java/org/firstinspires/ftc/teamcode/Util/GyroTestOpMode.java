@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode.Util;
 
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
 import org.lasarobotics.library.sensor.modernrobotics.Voltage;
 
 import java.util.ArrayList;
@@ -23,18 +25,7 @@ public class GyroTestOpMode extends OpMode {
 
     @Override
     public void init() {
-        telemetry.addData("Status", "Initialized");
 
-        gyros = new ArrayList<>();
-        Iterator<GyroSensor> iterator = hardwareMap.gyroSensor.iterator();
-        for (int i = 0; i < hardwareMap.gyroSensor.size(); i++) {
-            gyros.add(iterator.next());
-        }
-        for (GyroSensor gyro: gyros
-             ) {
-            gyro.calibrate();
-
-        }
     }
 
     /*
@@ -60,13 +51,6 @@ public class GyroTestOpMode extends OpMode {
      */
     @Override
     public void loop() {
-        for (GyroSensor gyro: gyros) {
-            if (gyro.isCalibrating())
-                continue;
-            telemetry.addData("X axis - " + gyro.getDeviceName(), gyro.rawX());
-            telemetry.addData("Y axis - " + gyro.getDeviceName(), gyro.rawY());
-            telemetry.addData("Z axis - " + gyro.getDeviceName(), gyro.rawZ());
-            telemetry.addData("Heading - " + gyro.getDeviceName(), gyro.getHeading());
-        }
+        telemetry.addData("heading", Robot.robot.gyro.getHeading());
     }
 }

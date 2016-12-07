@@ -96,7 +96,7 @@ public class Robot {
     // Some consts
     public final double noPushLeft = 0;
     public final double noPushRight = 230/255;
-    public final double shootSpeed = 0.75;
+    public final double shootSpeed = 0.60;
 
     public Robot () {
         // Set static instance to this. The other one will live on in memory and then get GC'ed
