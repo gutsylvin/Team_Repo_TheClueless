@@ -70,11 +70,13 @@ public class AutonomousOpMode extends LinearOpMode {
         telemetry.addData(">", "Calibrating Gyro");    //
         telemetry.update();
 
-        gyro.calibrate();
+        while (gyro.getHeading() != 0) {
+            gyro.calibrate();
 
-        while (gyro.isCalibrating()) {
-            Thread.sleep(50);
-            idle();
+            while (gyro.isCalibrating()) {
+                Thread.sleep(50);
+                idle();
+            }
         }
 
         telemetry.addData(">", "Robot Ready.");    //
@@ -86,6 +88,7 @@ public class AutonomousOpMode extends LinearOpMode {
         robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+        robot.conveyorGate.setPosition(0.863);
         // Wait for the game to start (Display Gyro value), and reset gyro before we move..
 
         prepareShoot(true);
@@ -148,23 +151,47 @@ public class AutonomousOpMode extends LinearOpMode {
 
 
 
-        encoderDrive(0.25, 0.75, 0.25, -500, -500, 5000);
+        encoderDrive(0.25, 0.75, 0.25, -450, -450, 5000);
+
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                robot.scissorLiftArmMotor.setPower(1);
+                try {
+                    Thread.sleep(1500);
+                }
+                catch (InterruptedException e) {
+                    // Just swallow the exception, it's not a big deal anyways.
+                }
+                robot.scissorLiftArmMotor.setPower(0);
+            }
+        });
+
+        thread.start();
+        /*for (int i = 0; i < 100; i++) {
+            robot.leftScissorliftServo.setPosition(0.843); // 215/255
+            robot.rightScissorliftServo.setPosition(0.059); // 15/255
+        }
+
+        raiseScissorliftServos();
+        */
+
         Thread.sleep(125);
-        gyroTurn(TURN_SPEED * 0.7, -135);
+        gyroTurn(TURN_SPEED * 1.1, -135);
 
         encoderDrive(0.25, 0.75, 0.25, 3050, 2900, 8000);
 
         gyroDriveUntilLine(0.15, 0.45);
 
-        gyroTurn(TURN_SPEED * 0.7, -90);
-        encoderDrive(0.5, 200, 200, 3000);
+        gyroTurn(TURN_SPEED * 0.85, -90);
+        encoderDrive(0.5, 300, 300, 3000);
         pushBeacon(0.45, -90);
         encoderDrive(0.7, -300, -300, 3000);
         gyroTurn(TURN_SPEED * 0.6, -178);
         encoderDrive(0.5, 0.75, 0.5, 2150, 2150, 10000);
         gyroDriveUntilLine(0.15, 0.45);
         encoderDrive(0.25, -50, -50, 2000);
-        gyroTurn(TURN_SPEED * 0.7, -90);
+        gyroTurn(TURN_SPEED * 0.85, -90);
         encoderDrive(0.8, 500, 500, 1000);
         pushBeacon(0.5, -90);
 
@@ -221,6 +248,11 @@ public class AutonomousOpMode extends LinearOpMode {
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
+    }
+
+    void raiseScissorliftServos () {
+        robot.leftScissorliftServo.setPosition(0.843); // 215/255
+        robot.rightScissorliftServo.setPosition(0.059);
     }
 
     void prepareShoot(boolean shooting) throws InterruptedException {
@@ -341,7 +373,7 @@ public class AutonomousOpMode extends LinearOpMode {
         Thread.sleep(250);
 
         while (robot.colorSensor.red() == robot.colorSensor.blue()) {
-            encoderDrive(0.25, 50, 50, 1000);
+            encoderDrive(0.25, 200, 200, 1000);
             idle();
             // huh. um. well we're screwed, but not really
         }

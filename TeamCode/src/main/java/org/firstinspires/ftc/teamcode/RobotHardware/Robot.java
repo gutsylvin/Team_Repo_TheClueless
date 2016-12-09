@@ -78,6 +78,8 @@ public class Robot {
     // Scissorlift
     public DcMotor scissorliftMotor;
 
+    public DcMotor scissorLiftArmMotor;
+
     //endregion
 
     // region
@@ -96,7 +98,7 @@ public class Robot {
     // Some consts
     public final double noPushLeft = 0;
     public final double noPushRight = 230/255;
-    public final double shootSpeed = 0.60;
+    public final double shootSpeed = 0.50;
 
     public Robot () {
         // Set static instance to this. The other one will live on in memory and then get GC'ed
@@ -129,6 +131,9 @@ public class Robot {
         scissorliftMotor = hardwareMap.dcMotor.get("scissor_lift");
 
         scissorliftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        scissorLiftArmMotor = hardwareMap.dcMotor.get("scissor_lift_arms");
+        scissorLiftArmMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         leftScissorliftServo = hardwareMap.servo.get("left_scissorlift_servo");
         rightScissorliftServo = hardwareMap.servo.get("right_scissorlift_servo");

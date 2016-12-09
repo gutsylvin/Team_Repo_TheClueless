@@ -94,7 +94,7 @@ public class TankTeleop extends OpMode {
 
     private double timeSinceLastTap;
 
-    private double sweeperSpeed = -1;
+    private double sweeperSpeed = 1;
 
     private boolean firstLoop = true;
 
@@ -254,7 +254,7 @@ public class TankTeleop extends OpMode {
             if (!previousGamepad2.y) {
                 shooting = false;
                 conveyor = false;
-                sweeper = false;
+                conveyorGate = true;
             }
         }
 
@@ -265,8 +265,11 @@ public class TankTeleop extends OpMode {
         robot.leftPushServo.setPosition(leftBeacon ? 0.431 /*110/255*/ : 0);
         robot.rightPushServo.setPosition(rightBeacon ? 0.5 : 0.961/*245/255*/);
 
-        robot.leftScissorliftServo.setPosition(scissorliftServos ? 0.843 : 0); // 215/255
-        robot.rightScissorliftServo.setPosition(scissorliftServos ? 0.059 : 0.902); // 15/255
+        float scissorLiftArmSpeed = gamepad2.left_trigger - gamepad2.right_trigger;
+        robot.scissorLiftArmMotor.setPower(scissorLiftArmSpeed);
+
+        // robot.leftScissorliftServo.setPosition(scissorliftServos ? 0.843 : 0); // 215/255
+        // robot.rightScissorliftServo.setPosition(scissorliftServos ? 0.059 : 0.902); // 15/255
 
         robot.ballCollectionMotor.setPower(sweeper ? sweeperSpeed : 0);
 
