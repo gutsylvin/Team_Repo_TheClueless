@@ -100,6 +100,8 @@ public class TankTeleop extends OpMode {
 
     private double lastTime;
 
+    private double scissorliftArmMaxSpeed = 0.5;
+
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -265,7 +267,7 @@ public class TankTeleop extends OpMode {
         robot.leftPushServo.setPosition(leftBeacon ? 0.431 /*110/255*/ : 0);
         robot.rightPushServo.setPosition(rightBeacon ? 0.5 : 0.961/*245/255*/);
 
-        float scissorLiftArmSpeed = gamepad2.left_trigger - gamepad2.right_trigger;
+        double scissorLiftArmSpeed = (gamepad2.left_trigger - gamepad2.right_trigger) * (scissorliftArmMaxSpeed);
         robot.scissorLiftArmMotor.setPower(scissorLiftArmSpeed);
 
         // robot.leftScissorliftServo.setPosition(scissorliftServos ? 0.843 : 0); // 215/255

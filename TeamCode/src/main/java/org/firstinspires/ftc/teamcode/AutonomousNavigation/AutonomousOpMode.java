@@ -37,13 +37,13 @@ public class AutonomousOpMode extends LinearOpMode {
     // These constants define the desired driving/control characteristics
     // The can/should be tweaked to suite the specific robot drive train.
     static final double TURN_SPEED = 0.2;     // Nominal half speed for better accuracy.
-    static final double TURN_TIMEOUT = 5;
+    static final double TURN_TIMEOUT = 10;
 
     static final double START_ENCODER = 200;    // Driving subroutines will use this encoder value as the "revving up" period
     static final double END_ENCODER = 500;
 
-    static final double HEADING_THRESHOLD = 2;      // As tight as we can make it with an integer gyro
-    static final double P_TURN_COEFF = 0.05;     // Larger is more responsive, but also less stable
+    static final double HEADING_THRESHOLD = 2;      // (NOT) As tight as we can make it with an integer gyro
+    static final double P_TURN_COEFF = 0.06;     // Larger is more responsive, but also less stable
     static final double P_DRIVE_COEFF = 0.20;     // Larger is more responsive, but also less stable
     static final double P_LINE_COEFF = 0.15;
 
@@ -91,7 +91,7 @@ public class AutonomousOpMode extends LinearOpMode {
         robot.conveyorGate.setPosition(0.863);
         // Wait for the game to start (Display Gyro value), and reset gyro before we move..
 
-        prepareShoot(true);
+
 
         while (!isStarted()) {
             telemetry.addData(">", "Robot Heading = %d", gyro.getIntegratedZValue());
@@ -100,6 +100,8 @@ public class AutonomousOpMode extends LinearOpMode {
             telemetry.update();
             idle();
         }
+
+        prepareShoot(true);
 
         robot.armReleasers.setPosition(0);
 
@@ -122,129 +124,56 @@ public class AutonomousOpMode extends LinearOpMode {
         int endLeftTurn;
         int endRightTurn;
 
-        //encoderDrive(0.8, -400, -400, 8000);
-        //gyroTurn(TURN_SPEED, -130);
-        // localTurn(0.25, 127);
-        // encoderTurn(0.25, 1500);
 
-        //encoderDrive(0.5, 2000, 2000, 8000);
+        if (MatchDetails.color == MatchDetails.TeamColor.RED) {
 
-        /*gyroDriveUntilLine(0.1, 0.6);
-        gyroTurn(TURN_SPEED, -90);
-        pushBeacon(0.75, -90);
-        encoderDrive(0.75, -400, -400, 3000);
-        gyroTurn(TURN_SPEED, -178);
-        encoderDrive(0.5, 2000, 2000, 5000);
+            encoderDrive(0.25, 0.75, 0.25, -400, -400, 5000);
 
-        /*encoderTurnTest(0.25, -180, 100000);
-        encoderTurnTest(0.25, -150, 100000);
-        encoderTurnTest(0.25, -120, 100000);
-        encoderTurnTest(0.25, -90, 100000);
-        encoderTurnTest(0.25, -60, 100000);
-        encoderTurnTest(0.25, -30, 100000);
-        encoderTurnTest(0.25, 30, 100000);
-        encoderTurnTest(0.25, 60, 100000);
-        encoderTurnTest(0.25, 90, 100000);
-        encoderTurnTest(0.25, 120, 100000);
-        encoderTurnTest(0.25, 150, 100000);
-        encoderTurnTest(0.25, 180, 100000);*/
+            Thread.sleep(125);
+            gyroTurn(TURN_SPEED * 0.9, -133);
 
+            encoderDrive(0.25, 0.75, 0.25, 3000, 2900, 8000);
 
+            gyroDriveUntilLine(0.15, 0.45);
 
-        encoderDrive(0.25, 0.75, 0.25, -450, -450, 5000);
+            gyroTurn(TURN_SPEED * 0.5, -93);
+            //encoderDrive(0.35, 325, 300, 3000);
+            pushBeacon(0.45, -90);
+            encoderDrive(0.7, -300, -300, 3000);
+            gyroTurn(TURN_SPEED * 0.75, -178);
+            encoderDrive(0.5, 0.75, 0.5, 2175, 2150, 10000);
+            gyroDriveUntilLine(0.15, 0.45);
+            encoderDrive(0.20, -50, -50, 2000);
+            gyroTurn(TURN_SPEED * 0.5, -93);
+            encoderDrive(0.8, 500, 500, 1000);
+            pushBeacon(0.5, -90);
+        }
+        else if (MatchDetails.color == MatchDetails.TeamColor.BLUE) {
 
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                robot.scissorLiftArmMotor.setPower(1);
-                try {
-                    Thread.sleep(1500);
-                }
-                catch (InterruptedException e) {
-                    // Just swallow the exception, it's not a big deal anyways.
-                }
-                robot.scissorLiftArmMotor.setPower(0);
-            }
-        });
+            encoderDrive(0.25, 0.75, 0.25, -625, -625, 5000);
 
-        thread.start();
-        /*for (int i = 0; i < 100; i++) {
-            robot.leftScissorliftServo.setPosition(0.843); // 215/255
-            robot.rightScissorliftServo.setPosition(0.059); // 15/255
+            Thread.sleep(125);
+            gyroTurn(TURN_SPEED * 0.5, 125);
+
+            encoderDrive(0.25, 0.75, 0.25, 2800, 2850, 8000);
+
+            gyroDriveUntilLine(0.15, 0.45);
+
+            gyroTurn(TURN_SPEED * 0.5, 93);
+            //encoderDrive(0.35, 325, 300, 3000);
+            pushBeacon(0.45, 90);
+            encoderDrive(0.7, -450, -450, 3000);
+            gyroTurn(TURN_SPEED * 0.75, 175);
+            encoderDrive(0.5, 0.75, 0.5, 2400, 2140, 10000);
+            gyroDriveUntilLine(0.15, 0.45);
+            // For some reason this isn't needed??? Lol ok that's cool too.
+            encoderDrive(0.20, 50, 50, 2000);
+            gyroTurn(TURN_SPEED * 0.5, 95);
+            encoderDrive(0.8, 300, 300, 1000);
+            pushBeacon(0.5, 90);
+
         }
 
-        raiseScissorliftServos();
-        */
-
-        Thread.sleep(125);
-        gyroTurn(TURN_SPEED * 1.1, -135);
-
-        encoderDrive(0.25, 0.75, 0.25, 3050, 2900, 8000);
-
-        gyroDriveUntilLine(0.15, 0.45);
-
-        gyroTurn(TURN_SPEED * 0.85, -90);
-        encoderDrive(0.5, 300, 300, 3000);
-        pushBeacon(0.45, -90);
-        encoderDrive(0.7, -300, -300, 3000);
-        gyroTurn(TURN_SPEED * 0.6, -178);
-        encoderDrive(0.5, 0.75, 0.5, 2150, 2150, 10000);
-        gyroDriveUntilLine(0.15, 0.45);
-        encoderDrive(0.25, -50, -50, 2000);
-        gyroTurn(TURN_SPEED * 0.85, -90);
-        encoderDrive(0.8, 500, 500, 1000);
-        pushBeacon(0.5, -90);
-
-        /*encoderDrive(0.7, -300, -300, 1500);
-        gyroTurn(TURN_SPEED, 45);
-        encoderDrive(1, 3000, 3000, 7000);
-        */
-        /* gyroTurn(TURN_SPEED, 0);
-        encoderDrive(0.45, -400, -400, 2000);
-        gyroDriveUntilLine(-0.08, 0.6);
-        encoderDrive(0.45, 175, 175, 2000);
-        gyroTurn(TURN_SPEED, -90);
-        encoderDrive(0.6, 400, 400, 2000);
-        pushBeacon(0.25, -90);
-        encoderDrive(0.6, -500, -500, 2000);
-        gyroTurn(TURN_SPEED, -180);
-        encoderDrive(0.6, 1700, 1700, 5000);
-        gyroDriveUntilLine(0.08, 0.6);
-        gyroTurn(TURN_SPEED, -90);
-        encoderDrive(0.5, 800, 800, 2500);
-        pushBeacon(0.25, -90); */
-
-        // gyroDrive(0.4, -1750, 0);
-        /*gyroDriveModified(0.45, 0.75, 0.25, -1600, 0);
-
-        gyroTurn(TURN_SPEED * 1.25, -90);
-
-        // gyroDrive(0.25, 800, -90);
-        // gyroDrive(0.75, 800, -90);
-        // gyroDrive(0.125, 800, -90);
-        gyroDriveModified(0.25, 0.5, 0.5, 2400, -90);
-
-        gyroTurn(TURN_SPEED * 1.25, 0);
-
-        gyroDrive(0.25, -50, 0);
-        gyroDriveUntilLine(-0.08, 0.60);
-
-        gyroDrive(0.25, 175, 0);
-        gyroTurn(TURN_SPEED * 1.5, -90);
-        gyroDrive(0.25, 400, -90);
-
-        pushBeacon(-0.25, -90);
-
-        gyroDrive(0.50, -800, -90);
-
-        gyroTurn(TURN_SPEED * 1.25, -180);
-        gyroDriveModified(0.25, 0.75, 0.25, 1500, -180);
-        gyroTurn(0.25, -180);
-        gyroDriveUntilLine(0.05, 0.60);
-        gyroTurn(TURN_SPEED * 1.25, -90);
-        gyroDrive(0.25, 400, -90);
-        pushBeacon(0.25, -90);
-        */
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
@@ -257,6 +186,7 @@ public class AutonomousOpMode extends LinearOpMode {
 
     void prepareShoot(boolean shooting) throws InterruptedException {
         robot.shoot(shooting);
+        Thread.sleep(750);
     }
 
     void shoot() throws InterruptedException {
@@ -292,6 +222,10 @@ public class AutonomousOpMode extends LinearOpMode {
                              double left, double right,
                              double timeoutS) throws InterruptedException {
         encoderDrive(speed, speed, speed, left, right, timeoutS);
+    }
+
+    public void encoderDrive (double speed, double counts, double timeoutMs) throws InterruptedException {
+        encoderDrive(speed, speed, speed, counts, counts, timeoutMs / 1000);
     }
 
     public void encoderDrive(double speed,
@@ -373,7 +307,7 @@ public class AutonomousOpMode extends LinearOpMode {
         Thread.sleep(250);
 
         while (robot.colorSensor.red() == robot.colorSensor.blue()) {
-            encoderDrive(0.25, 200, 200, 1000);
+            encoderDrive(0.25, 150, 150, 1000);
             idle();
             // huh. um. well we're screwed, but not really
         }
@@ -403,7 +337,7 @@ public class AutonomousOpMode extends LinearOpMode {
         telemetry.addData("Team Color", MatchDetails.color);
         Thread.sleep(500);
 
-        encoderDrive(speed, 1000, 1000, 750);
+        encoderDrive(speed, 1000, 2000);
 
         /*while (true) {
             telemetry.addData("color", colorDetected.toString());
