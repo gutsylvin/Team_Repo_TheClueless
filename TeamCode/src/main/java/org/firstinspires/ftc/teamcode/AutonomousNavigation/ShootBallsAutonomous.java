@@ -3,16 +3,11 @@ package org.firstinspires.ftc.teamcode.AutonomousNavigation;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.RobotLog;
 
-import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
-import org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.InstructionInterpreter;
-import org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.JsonInterpreter;
 import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
 
 
@@ -20,8 +15,8 @@ import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
  * Created by hsunx on 10/22/2016.
  */
 
-@Autonomous(name = "Autonomous: Autonomous", group = "Autonomous")
-public class AutonomousOpMode extends LinearOpMode {
+@Autonomous(name = "Autonomous: Shoot Balls Autonomous", group = "Autonomous")
+public class ShootBallsAutonomous extends LinearOpMode {
     /* Declare OpMode members. */
     Robot robot = new Robot();   // Use a Pushbot's hardware
     ModernRoboticsI2cGyro gyro = null;                    // Additional Gyro device
@@ -117,6 +112,7 @@ public class AutonomousOpMode extends LinearOpMode {
         shoot();
         prepareShoot(false);
 
+        /*
         int startLeftTurn;
         int startRightTurn;
         int endLeftTurn;
@@ -128,7 +124,7 @@ public class AutonomousOpMode extends LinearOpMode {
             encoderDrive(0.25, 0.75, 0.25, -400, -400, 5000);
 
             Thread.sleep(125);
-            gyroTurn(TURN_SPEED * 0.9, -132);
+            gyroTurn(TURN_SPEED * 0.9, -133);
 
             encoderDrive(0.25, 0.75, 0.25, 3000, 2900, 8000);
 
@@ -157,12 +153,12 @@ public class AutonomousOpMode extends LinearOpMode {
 
             gyroDriveUntilLine(0.15, 0.45);
 
-            gyroTurn(TURN_SPEED * 0.5, 91);
+            gyroTurn(TURN_SPEED * 0.5, 93);
             //encoderDrive(0.35, 325, 300, 3000);
             pushBeacon(0.45, 90);
             encoderDrive(0.7, -450, -450, 3000);
-            gyroTurn(TURN_SPEED * 0.75, 168);
-            encoderDrive(0.5, 0.75, 0.5, 2450, 2140, 10000);
+            gyroTurn(TURN_SPEED * 0.75, 175);
+            encoderDrive(0.5, 0.75, 0.5, 2400, 2140, 10000);
             gyroDriveUntilLine(0.15, 0.45);
             // For some reason this isn't needed??? Lol ok that's cool too.
             encoderDrive(0.20, 50, 50, 2000);
@@ -171,8 +167,7 @@ public class AutonomousOpMode extends LinearOpMode {
             pushBeacon(0.5, 90);
 
         }
-
-
+        */
         telemetry.addData("Path", "Complete");
         telemetry.update();
     }
@@ -184,12 +179,12 @@ public class AutonomousOpMode extends LinearOpMode {
 
     void prepareShoot(boolean shooting) throws InterruptedException {
         robot.shoot(shooting);
-        Thread.sleep(750);
+        Thread.sleep(2000);
     }
 
     void shoot() throws InterruptedException {
         robot.conveyorMotor.setPower(1);
-        Thread.sleep(2000);
+        Thread.sleep(4000);
         robot.conveyorMotor.setPower(0);
     }
 
