@@ -4,6 +4,8 @@ package org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual;
  * Created by hsunx on 10/21/2016.
  */
 
+import android.support.annotation.Nullable;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -29,6 +31,7 @@ import java.util.List;
 public class JsonInterpreter {
     final String TYPE_INSTRUCTION_SEPERATOR = "###";
 
+    /*@Nullable
     private Instruction[] FromString (String string) {
         // Initialize all dat json stuffs
         GsonBuilder gsonBuilder = new GsonBuilder();
@@ -88,7 +91,7 @@ public class JsonInterpreter {
     }
 
     // Do include the file extension
-    public Instruction[] FromTxtFile (String fileInFIRSTDirectory) {
+    /*public Instruction[] FromTxtFile (String fileInFIRSTDirectory) {
         StringBuilder text = new StringBuilder();
         BufferedReader reader;
         try {
@@ -121,4 +124,5 @@ public class JsonInterpreter {
             this.instruction = instruction;
         }
     }
+    */
 }

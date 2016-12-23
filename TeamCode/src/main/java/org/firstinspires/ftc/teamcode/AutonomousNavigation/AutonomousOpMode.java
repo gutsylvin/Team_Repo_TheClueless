@@ -3,17 +3,18 @@ package org.firstinspires.ftc.teamcode.AutonomousNavigation;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.RobotLog;
 
-import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
-import org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.InstructionInterpreter;
-import org.firstinspires.ftc.teamcode.AutonomousNavigation.Manual.JsonInterpreter;
 import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
+import org.lasarobotics.vision.android.Cameras;
+import org.lasarobotics.vision.ftc.resq.Beacon;
+import org.lasarobotics.vision.opmode.LinearVisionOpMode;
+import org.lasarobotics.vision.opmode.extensions.CameraControlExtension;
+import org.lasarobotics.vision.util.ScreenOrientation;
+import org.opencv.core.Size;
 
 
 /**
@@ -21,7 +22,7 @@ import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
  */
 
 @Autonomous(name = "Autonomous: Autonomous", group = "Autonomous")
-public class AutonomousOpMode extends LinearOpMode {
+public class AutonomousOpMode extends LinearVisionOpMode {
     /* Declare OpMode members. */
     Robot robot = new Robot();   // Use a Pushbot's hardware
     ModernRoboticsI2cGyro gyro = null;                    // Additional Gyro device
@@ -50,9 +51,83 @@ public class AutonomousOpMode extends LinearOpMode {
     boolean left1;
     boolean left2;
 
-
     @Override
     public void runOpMode() throws InterruptedException {
+        //region ftcvision
+        //Wait for vision to initialize - this should be the first thing you do
+        waitForVisionStart();
+        /**
+         * Set the camera used for detection
+         * PRIMARY = Front-facing, larger camera
+         * SECONDARY = Screen-facing, "selfie" camera :D
+         **/
+        this.setCamera(Cameras.PRIMARY);
+
+        /**
+         * Set the frame size
+         * Larger = sometimes more accurate, but also much slower
+         * After this method runs, it will set the "width" and "height" of the frame
+         **/
+        this.setFrameSize(new Size(900, 900));
+
+        /**
+         * Enable extensions. Use what you need.
+         * If you turn on the BEACON extension, it's best to turn on ROTATION too.
+         */
+        enableExtension(Extensions.BEACON);         //Beacon detection
+        enableExtension(Extensions.ROTATION);       //Automatic screen rotation correction
+        enableExtension(Extensions.CAMERA_CONTROL); //Manual camera control
+
+        /**
+         * Set the beacon analysis method
+         * Try them all and see what works!
+         */
+        beacon.setAnalysisMethod(Beacon.AnalysisMethod.FAST);
+
+        /**
+         * Set color tolerances
+         * 0 is default, -1 is minimum and 1 is maximum tolerance
+         */
+        beacon.setColorToleranceRed(0);
+        beacon.setColorToleranceBlue(0);
+
+        /**
+         * Set analysis boundary
+         * You should comment this to use the entire screen and uncomment only if
+         * you want faster analysis at the cost of not using the entire frame.
+         * This is also particularly useful if you know approximately where the beacon is
+         * as this will eliminate parts of the frame which may cause problems
+         * This will not work on some methods, such as COMPLEX
+         **/
+        //beacon.setAnalysisBounds(new Rectangle(new Point(width / 2, height / 2), width - 200, 200));
+
+        /**
+         * Set the rotation parameters of the screen
+         * If colors are being flipped or output appears consistently incorrect, try changing these.
+         *
+         * First, tell the extension whether you are using a secondary camera
+         * (or in some devices, a front-facing camera that reverses some colors).
+         *
+         * It's a good idea to disable global auto rotate in Android settings. You can do this
+         * by calling disableAutoRotate() or enableAutoRotate().
+         *
+         * It's also a good idea to force the phone into a specific orientation (or auto rotate) by
+         * calling either setActivityOrientationAutoRotate() or setActivityOrientationFixed(). If
+         * you don't, the camera reader may have problems reading the current orientation.
+         */
+        rotation.setIsUsingSecondaryCamera(false);
+        rotation.disableAutoRotate();
+        rotation.setActivityOrientationFixed(ScreenOrientation.PORTRAIT);
+
+        /**
+         * Set camera control extension preferences
+         *
+         * Enabling manual settings will improve analysis rate and may lead to better results under
+         * tested conditions. If the environment changes, expect to change these values.
+         */
+        cameraControl.setColorTemperature(CameraControlExtension.ColorTemperature.AUTO);
+        cameraControl.setAutoExposureCompensation();
+        //endregion
 
         /*
          * Initialize the standard drive system variables.
@@ -81,7 +156,6 @@ public class AutonomousOpMode extends LinearOpMode {
 
         telemetry.addData(">", "Robot Ready.");    //
         telemetry.update();
-
 
         robot.gyro.resetDeviceConfigurationForOpMode();
         robot.gyro.setHeadingMode(ModernRoboticsI2cGyro.HeadingMode.HEADING_CARTESIAN);
@@ -116,12 +190,6 @@ public class AutonomousOpMode extends LinearOpMode {
 
         shoot();
         prepareShoot(false);
-
-        int startLeftTurn;
-        int startRightTurn;
-        int endLeftTurn;
-        int endRightTurn;
-
 
         if (MatchDetails.color == MatchDetails.TeamColor.RED) {
 
@@ -298,17 +366,59 @@ public class AutonomousOpMode extends LinearOpMode {
         }
     }
 
+    MatchDetails.TeamColor convertColor (Beacon.BeaconColor color) {
+
+        switch (color) {
+            case BLUE:
+                return MatchDetails.TeamColor.BLUE;
+            case BLUE_BRIGHT:
+                return MatchDetails.TeamColor.BLUE;
+            case RED:
+                return MatchDetails.TeamColor.RED;
+            case RED_BRIGHT:
+                return MatchDetails.TeamColor.RED;
+        }
+
+        return MatchDetails.TeamColor.UNKNOWN;
+    }
+
     void pushBeacon(double speed, double angle) throws InterruptedException {
 
         MatchDetails.TeamColor colorDetected = MatchDetails.TeamColor.RED; // This will be properly assigned later so that's cool
+        boolean left = false;
 
         Thread.sleep(250);
 
+        Beacon.BeaconAnalysis analysis = beacon.getAnalysis();
+
+        // Just try and determine it. This assumes (gasp!) that the two colors are different,
+        // which they almost always will be. I hope.
+        if (analysis.isBeaconFound()) {
+            if (analysis.isLeftKnown()) {
+                if (convertColor(analysis.getStateLeft()) == MatchDetails.color) {
+                    left = true;
+                }
+                else {
+                    left = false;
+                }
+            }
+            if (analysis.isRightKnown()) {
+                if (convertColor(analysis.getStateRight()) == MatchDetails.color) {
+                    left = false;
+                }
+                else {
+                    left = true;
+                }
+            }
+        }
+        /*
         while (robot.colorSensor.red() == robot.colorSensor.blue()) {
             encoderDrive(0.25, 150, 150, 1000);
             idle();
             // huh. um. well we're screwed, but not really
         }
+        */
+        /*
         if (robot.colorSensor.red() > robot.colorSensor.blue()) {
             if (MatchDetails.color == MatchDetails.TeamColor.RED) {
                 robot.rightPushServo.setPosition(0.5);
@@ -326,7 +436,10 @@ public class AutonomousOpMode extends LinearOpMode {
                 colorDetected = MatchDetails.TeamColor.BLUE;
             }
         }
+        */
 
+
+        driveCenteredBeacon (4000);
 
         robot.leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         robot.rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -361,6 +474,10 @@ public class AutonomousOpMode extends LinearOpMode {
         robot.rightMotor.setPower(0);
         robot.leftPushServo.setPosition(0);
         robot.rightPushServo.setPosition(0.961);
+    }
+
+    void driveCenteredBeacon (int timeoutMs) {
+
     }
 
     void playSoundFile() {

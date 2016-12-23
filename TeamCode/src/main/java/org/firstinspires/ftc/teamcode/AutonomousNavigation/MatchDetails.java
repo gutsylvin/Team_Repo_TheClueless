@@ -8,7 +8,8 @@ public class MatchDetails {
     public static TeamColor color;
     public enum TeamColor {
         BLUE,
-        RED
+        RED,
+        UNKNOWN
     }
     public static String pathToInstructions;
 

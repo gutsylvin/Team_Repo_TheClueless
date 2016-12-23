@@ -3,5 +3,5 @@ include ':TeamCode'
 include ':opencv-java'
 include ':ftc-visionlib'
 
-project(':opencv-java').projectDir = new File('ftc-vision/opencv-java')
-project(':ftc-visionlib').projectDir = new File('ftc-vision/ftc-visionlib')
+project(':opencv-java').projectDir = new File('FTCVision/opencv-java')
+project(':ftc-visionlib').projectDir = new File('FTCVision/ftc-visionlib')

@@ -171,4 +171,11 @@ public class Robot {
             robot.rightShootMotor.setPower(shooting ? shootSpeed : 0);
         }
     }
+
+    public void shoot (boolean shooting, double speed) {
+        if (initialized) {
+            robot.leftShootMotor.setPower(shooting ? speed : 0);
+            robot.rightShootMotor.setPower(shooting ? speed : 0);
+        }
+    }
 }
