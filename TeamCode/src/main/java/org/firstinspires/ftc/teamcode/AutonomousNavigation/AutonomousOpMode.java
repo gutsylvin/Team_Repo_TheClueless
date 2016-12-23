@@ -476,55 +476,35 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         robot.rightPushServo.setPosition(0.961);
     }
 
+
     void driveCenteredBeacon (int timeoutMs) {
+        boolean reachedBeacon = false;
+        double startTime = time * 1000;
+        while (opModeIsActive() && !reachedBeacon && time * 1000 - startTime > timeoutMs) {
 
-    }
 
-    void playSoundFile() {
-
-    }
-
-    /**
-     * Method to follow a line of the specified reflectivity. Suggested that you
-     * calibrate the Optical Distance Sensor first
-     *
-     * @param speed    Target speed for motion.
-     * @param distance Distance to move in encoder counts
-     * @param target   Target reflectivity for the Optical Distance Sensor. Between 0.0 and 1.0
-     */
-
-    public void followLine(double speed,
-                           double distance,
-                           double target) throws InterruptedException {
-
-        if (opModeIsActive()) {
-            int moveCount = (int) (distance * COUNTS_PER_INCH);
-            while (opModeIsActive() && robot.leftMotor.getCurrentPosition() < moveCount && robot.rightMotor.getCurrentPosition() < moveCount) {
-                double error = (target - robot.opticalDistanceSensor.getLightDetected()) * P_LINE_COEFF;
-
-                double leftPower = speed;
-                double rightPower = speed;
-
-                if (error < 0) {
-                    leftPower -= error;
-                } else {
-                    rightPower -= error;
-                }
-
-                robot.leftMotor.setPower(leftPower);
-                robot.rightMotor.setPower(rightPower);
-
-                telemetry.addData("following", "line");
-                telemetry.addData("ods value", robot.opticalDistanceSensor.getLightDetected());
-                telemetry.addData("error", error);
-                telemetry.addData("left power", leftPower);
-                telemetry.addData("right power", rightPower);
-
-                idle();
-            }
         }
-
     }
+
+
+    public void gyroDriveSimple (double speed, double distance, double angle, double timeout) {
+        robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        double leftSpeed;
+        double rightSpeed;
+
+        double startTime = time;
+
+        while (opModeIsActive() && time - startTime < timeout) {
+            double error = angle - robot.gyro.getIntegratedZValue();
+            double offset = error * P_DRIVE_COEFF;
+            robot.leftMotor.setPower(speed + offset);
+            robot.rightMotor.setPower(speed - offset);
+            telemetry.addData("angle", robot.gyro.getIntegratedZValue());
+            telemetry.update();
+        }
+    }
+
 
     /**
      * Method to drive on a fixed compass bearing (angle), based on encoder counts.

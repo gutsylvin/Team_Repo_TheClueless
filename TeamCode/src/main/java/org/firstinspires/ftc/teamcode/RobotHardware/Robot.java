@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.LightSensor;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -56,6 +57,9 @@ public class Robot {
     public OpticalDistanceSensor opticalDistanceSensor;
 
     public ModernRoboticsI2cColorSensor colorSensor;
+
+    public LightSensor leftLightSensor;
+    public LightSensor rightLightSensor;
     // endregion
 
 
@@ -150,6 +154,9 @@ public class Robot {
         opticalDistanceSensor = (hardwareMap.opticalDistanceSensor.get("ods"));
 
         colorSensor = ((ModernRoboticsI2cColorSensor) hardwareMap.colorSensor.get("color_sensor"));
+
+        //leftLightSensor = hardwareMap.lightSensor.get("left_light_sensor");
+        //rightLightSensor = hardwareMap.lightSensor.get("right_light_sensor");
 
         initialized = true;
 

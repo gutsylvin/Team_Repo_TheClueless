@@ -5,78 +5,50 @@ import com.qualcomm.hardware.modernrobotics.ModernRoboticsAnalogOpticalDistanceS
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsDigitalTouchSensor;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cColorSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.ColorSensor;
-import com.qualcomm.robotcore.hardware.I2cDevice;
-import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
-import org.firstinspires.ftc.robotcontroller.external.samples.SensorMROpticalDistance;
+
+import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
+
+import static org.firstinspires.ftc.teamcode.RobotHardware.Robot.robot;
 
 /**
  * Created by hsunx on 10/29/2016.
  */
-@Autonomous (name = "Servo Tester", group = "Test")
-public class QuickTestOpMode extends OpMode {
+@Autonomous (name = "Tester", group = "Test")
+public class QuickTestOpMode extends LinearOpMode {
 
-    ModernRoboticsDigitalTouchSensor touchSensor;
-    ModernRoboticsI2cColorSensor colorSensor;
-    ModernRoboticsAnalogOpticalDistanceSensor ods;
-    Servo servo;
-
-    double servoPosition;
-    double servoSpeed = 0.02;
-
-    boolean clockwise = true;
+    final double P_DRIVE_COEFF = 0.05;
 
     @Override
-    public void init() {
-        // colorSensor = ((ModernRoboticsI2cColorSensor) hardwareMap.colorSensor.get("color_sensor"));
-        // touchSensor = ((ModernRoboticsDigitalTouchSensor) hardwareMap.touchSensor.get("touch_sensor"));
-        // ods = ((ModernRoboticsAnalogOpticalDistanceSensor) hardwareMap.opticalDistanceSensor.get("ods"));
+    public void runOpMode() throws InterruptedException {
+        Robot robot = new Robot();
+        robot.init(hardwareMap, telemetry);
 
-        servo = hardwareMap.servo.get("servo");
+        waitForStart();
+
+        gyroDriveSimple(0.25, 19305, 30, 5);
     }
 
-    @Override
-    public void start() {
-        super.start();
-    }
+    public void gyroDriveSimple (double speed, double distance, double angle, double timeout) throws InterruptedException{
 
-    @Override
-    public void loop() {
-        // colorSensor.enableLed(touchSensor.isPressed());
-        // telemetry.addData("touch", touchSensor.isPressed());
-        // telemetry.addData("red", colorSensor.red());
-        // telemetry.addData("green", colorSensor.green());
-        // telemetry.addData("blue", colorSensor.blue());
-        // telemetry.addData("alpha", colorSensor.alpha());
-        // telemetry.addData("ods reflect", ods.getLightDetected() + ", raw: " + ods.getRawLightDetected());
+        robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        double leftSpeed;
+        double rightSpeed;
 
-        if (clockwise) {
-            if (servo.getPosition() >= 1) {
-                clockwise = false;
-            }
-            else {
-                servoPosition += servoSpeed;
-                servo.setPosition(servoPosition);
-            }
+        double startTime = time;
+
+        while (opModeIsActive() && time - startTime < timeout) {
+            double error = angle - robot.gyro.getIntegratedZValue();
+            double offset = error * P_DRIVE_COEFF;
+            robot.leftMotor.setPower(speed + offset);
+            robot.rightMotor.setPower(speed - offset);
+            telemetry.addData("angle", robot.gyro.getIntegratedZValue());
+            telemetry.addData("error", error);
+            telemetry.update();
+            idle();
         }
-        else {
-            if (servo.getPosition() <= 0) {
-                clockwise = true;
-            }
-            else {
-                servoPosition -= servoSpeed;
-                servo.setPosition(servoPosition);
-            }
-        }
-
-    }
-
-    @Override
-    public void stop() {
-        super.stop();
     }
 }
