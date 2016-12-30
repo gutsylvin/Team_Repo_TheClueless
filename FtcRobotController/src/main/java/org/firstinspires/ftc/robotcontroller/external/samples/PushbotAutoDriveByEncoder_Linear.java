@@ -82,7 +82,7 @@ public class PushbotAutoDriveByEncoder_Linear extends LinearOpMode {
     static final double     TURN_SPEED              = 0.5;
 
     @Override
-    public void runOpMode() throws InterruptedException {
+    public void runOpMode() {
 
         /*
          * Initialize the drive system variables.
@@ -133,15 +133,15 @@ public class PushbotAutoDriveByEncoder_Linear extends LinearOpMode {
      *  3) Driver stops the opmode running.
      */
     public void encoderDrive(double speed,
-            double leftInches, double rightInches,
-            double timeoutS) throws InterruptedException {
-                int newLeftTarget;
-                int newRightTarget;
+                             double leftInches, double rightInches,
+                             double timeoutS) {
+        int newLeftTarget;
+        int newRightTarget;
 
-                // Ensure that the opmode is still active
-                if (opModeIsActive()) {
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
 
-                    // Determine new target position, and pass to motor controller
+            // Determine new target position, and pass to motor controller
             newLeftTarget = robot.leftMotor.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
             newRightTarget = robot.rightMotor.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
             robot.leftMotor.setTargetPosition(newLeftTarget);
@@ -158,18 +158,15 @@ public class PushbotAutoDriveByEncoder_Linear extends LinearOpMode {
 
             // keep looping while we are still active, and there is time left, and both motors are running.
             while (opModeIsActive() &&
-                    (runtime.seconds() < timeoutS) &&
-                    (robot.leftMotor.isBusy() && robot.rightMotor.isBusy())) {
+                   (runtime.seconds() < timeoutS) &&
+                   (robot.leftMotor.isBusy() && robot.rightMotor.isBusy())) {
 
                 // Display it for the driver.
                 telemetry.addData("Path1",  "Running to %7d :%7d", newLeftTarget,  newRightTarget);
                 telemetry.addData("Path2",  "Running at %7d :%7d",
-                        robot.leftMotor.getCurrentPosition(),
-                        robot.rightMotor.getCurrentPosition());
+                                            robot.leftMotor.getCurrentPosition(),
+                                            robot.rightMotor.getCurrentPosition());
                 telemetry.update();
-
-                // Allow time for other processes to run.
-                idle();
             }
 
             // Stop all motion;

@@ -85,6 +85,7 @@ import java.util.List;
  */
 
 @Autonomous(name="Concept: Vuforia Navigation", group ="Concept")
+@Disabled
 public class ConceptVuforiaNavigation extends LinearOpMode {
 
     public static final String TAG = "Vuforia Sample";
@@ -97,7 +98,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
      */
     VuforiaLocalizer vuforia;
 
-    @Override public void runOpMode() throws InterruptedException {
+    @Override public void runOpMode() {
         /**
          * Start up Vuforia, telling it the id of the view that we wish to use as the parent for
          * the camera monitor feedback; if no camera monitor feedback is desired, use the parameterless
@@ -122,7 +123,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
          * {@link Parameters} instance with which you initialize Vuforia.
          */
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
-        parameters.vuforiaLicenseKey = "AdXaTPT/////AAAAGY2PoL4OLkLTtC+FxoIdP5mKFmPatlgSlGpJMc1fbD9mn9YjjhZxYWPMnYbfDcr+7aYubwcfRgzQ6wmoRt4VQZkBrbH4KLhWna3cfA+v4XZBJ0HOn8GZ65ZKH6sPNYsOsaPNoobU1A3Da6yQQKQGf6Wl8dV0we4X+8SCmlV1OvjokDYIU8pfFMBo+SepIr1p+U2UWgMxJnQIPNav9c1FMN4hJrALmk7jriE4fQZJFaZEjglsG5L+iNWH1zbzMDs+r5RcH0QpqD6Hp1ErNDqx3hCjuUEUKUM7kr6agcmN1XmdHgIAMIPVLKPhGEp5TaIz3uXDHe+Ekm4NxKkpANUTcY33PXT9ZNgqAOtJre8PoUOp";
+        parameters.vuforiaLicenseKey = "ATsODcD/////AAAAAVw2lR...d45oGpdljdOh5LuFB9nDNfckoxb8COxKSFX";
         parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
         this.vuforia = ClassFactory.createVuforiaLocalizer(parameters);
 
@@ -318,7 +319,6 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
                 telemetry.addData("Pos", "Unknown");
             }
             telemetry.update();
-            idle();
         }
     }
 

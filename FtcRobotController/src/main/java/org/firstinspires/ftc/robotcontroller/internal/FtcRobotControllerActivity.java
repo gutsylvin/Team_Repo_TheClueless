@@ -41,6 +41,11 @@ import android.content.res.Configuration;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.media.MediaPlayer;
+import android.content.SharedPreferences;
+import android.content.res.Configuration;
+import android.content.res.Resources;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbManager;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -56,6 +61,7 @@ import android.view.inputmethod.EditorInfo;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.webkit.WebView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -104,6 +110,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class FtcRobotControllerActivity extends Activity {
 
   public static final String TAG = "RCActivity";
+
   public static String instructionsPath;
 
   private static final String PATH_TO_INSTRUCTIONS_FILE = "/storage/sdcard1/FIRST/";
@@ -208,10 +215,8 @@ public class FtcRobotControllerActivity extends Activity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    RobotLog.writeLogcatToDisk();
     RobotLog.vv(TAG, "onCreate()");
-
-
-
     receivedUsbAttachmentNotifications = new ConcurrentLinkedQueue<UsbDevice>();
     eventLoop = null;
 
@@ -303,10 +308,9 @@ public class FtcRobotControllerActivity extends Activity {
 
     if (USE_DEVICE_EMULATION) { HardwareFactory.enableDeviceEmulation(); }
 
-    // save 4MB of logcat to the SD card
-    RobotLog.writeLogcatToDisk(this, 4 * 1024);
     wifiLock.acquire();
     callback.networkConnectionUpdate(WifiDirectAssistant.Event.DISCONNECTED);
+    readNetworkType(NETWORK_TYPE_FILENAME);
     bindToService();
   }
 
@@ -347,7 +351,6 @@ public class FtcRobotControllerActivity extends Activity {
   protected void onResume() {
     super.onResume();
     RobotLog.vv(TAG, "onResume()");
-    readNetworkType(NETWORK_TYPE_FILENAME);
   }
 
   @Override
@@ -377,7 +380,7 @@ public class FtcRobotControllerActivity extends Activity {
 
     unbindFromService();
     wifiLock.release();
-    RobotLog.cancelWriteLogcatToDisk(this);
+    RobotLog.cancelWriteLogcatToDisk();
   }
 
   protected void bindToService() {
@@ -413,6 +416,12 @@ public class FtcRobotControllerActivity extends Activity {
     String fileContents = readFile(networkTypeFile);
     networkType = NetworkConnectionFactory.getTypeFromString(fileContents);
     programmingModeController.setCurrentNetworkType(networkType);
+
+    // update the preferences
+    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+    SharedPreferences.Editor editor = preferences.edit();
+    editor.putString(NetworkConnectionFactory.NETWORK_CONNECTION_TYPE, networkType.toString());
+    editor.commit();
   }
 
   private String readFile(File file) {
@@ -540,7 +549,13 @@ public class FtcRobotControllerActivity extends Activity {
     HardwareFactory factory;
     RobotConfigFile file = cfgFileMgr.getActiveConfigAndUpdateUI();
     HardwareFactory hardwareFactory = new HardwareFactory(context);
-    hardwareFactory.setXmlPullParser(file.getXml());
+    try {
+      hardwareFactory.setXmlPullParser(file.getXml());
+    } catch (Resources.NotFoundException e) {
+      file = RobotConfigFile.noConfig(cfgFileMgr);
+      hardwareFactory.setXmlPullParser(file.getXml());
+      cfgFileMgr.setActiveConfigAndUpdateUI(false, file);
+    }
     factory = hardwareFactory;
 
     eventLoop = new FtcEventLoop(factory, createOpModeRegister(), callback, this, programmingModeController);
