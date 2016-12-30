@@ -1,22 +1,30 @@
 package org.firstinspires.ftc.teamcode.AutonomousNavigation;
 
+import com.qualcomm.hardware.hitechnic.HiTechnicNxtLightSensor;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.LightSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
+import org.lasarobotics.library.util.Log;
+import org.lasarobotics.vision.android.Cameras;
+import org.lasarobotics.vision.ftc.resq.Beacon;
+import org.lasarobotics.vision.opmode.LinearVisionOpMode;
+import org.lasarobotics.vision.opmode.extensions.CameraControlExtension;
+import org.lasarobotics.vision.util.ScreenOrientation;
+import org.opencv.core.Size;
 
 
 /**
  * Created by hsunx on 10/22/2016.
  */
 
-@Autonomous(name = "Autonomous: Shoot Balls Autonomous", group = "Autonomous")
-public class ShootBallsAutonomous extends LinearOpMode {
+@Autonomous(name = "BeaconAutonomous", group = "Autonomous")
+public class BeaconPushTestOpMode extends LinearVisionOpMode {
     /* Declare OpMode members. */
     Robot robot = new Robot();   // Use a Pushbot's hardware
     ModernRoboticsI2cGyro gyro = null;                    // Additional Gyro device
@@ -29,6 +37,18 @@ public class ShootBallsAutonomous extends LinearOpMode {
     static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
 
+    // This setup assumes use of ZTE Speed (what a shitty phone, if you can, get a better one)
+    static final int SCREEN_RESOLUTION_X = 560;
+    static final int SCREEN_RESOLUTION_Y = 960;
+
+    // P value for the vision-drive control system
+    static final double VISION_P = 0.01;
+
+    static final double CONFIDENCE_THRESHOLD = 0.75; // This is how confident the FTCVision reading needs to be in order
+                                                     // for the program to be sure of its results. Lower is less accurate (duh)
+                                                     // but higher may lead to inefficiency.
+    static final double LINE_THRESHOLD = 0.6;        // Used for the lines on the Velocity Vortex mat.
+
     // These constants define the desired driving/control characteristics
     // The can/should be tweaked to suite the specific robot drive train.
     static final double TURN_SPEED = 0.2;     // Nominal half speed for better accuracy.
@@ -39,15 +59,89 @@ public class ShootBallsAutonomous extends LinearOpMode {
 
     static final double HEADING_THRESHOLD = 2;      // (NOT) As tight as we can make it with an integer gyro
     static final double P_TURN_COEFF = 0.06;     // Larger is more responsive, but also less stable
-    static final double P_DRIVE_COEFF = 0.20;     // Larger is more responsive, but also less stable
+    static final double P_DRIVE_COEFF = 0.03;     // Larger is more responsive, but also less stable
     static final double P_LINE_COEFF = 0.15;
 
     boolean left1;
     boolean left2;
 
-
     @Override
     public void runOpMode() throws InterruptedException {
+        //region ftcvision
+        //Wait for vision to initialize - this should be the first thing you do
+        waitForVisionStart();
+        /**
+         * Set the camera used for detection
+         * PRIMARY = Front-facing, larger camera
+         * SECONDARY = Screen-facing, "selfie" camera :D
+         **/
+        this.setCamera(Cameras.PRIMARY);
+
+        /**
+         * Set the frame size
+         * Larger = sometimes more accurate, but also much slower
+         * After this method runs, it will set the "width" and "height" of the frame
+         **/
+        this.setFrameSize(new Size(900, 900));
+
+        /**
+         * Enable extensions. Use what you need.
+         * If you turn on the BEACON extension, it's best to turn on ROTATION too.
+         */
+        enableExtension(Extensions.BEACON);         //Beacon detection
+        enableExtension(Extensions.ROTATION);       //Automatic screen rotation correction
+        enableExtension(Extensions.CAMERA_CONTROL); //Manual camera control
+
+        /**
+         * Set the beacon analysis method
+         * Try them all and see what works!
+         */
+        beacon.setAnalysisMethod(Beacon.AnalysisMethod.FAST);
+
+        /**
+         * Set color tolerances
+         * 0 is default, -1 is minimum and 1 is maximum tolerance
+         */
+        beacon.setColorToleranceRed(0);
+        beacon.setColorToleranceBlue(0);
+
+        /**
+         * Set analysis boundary
+         * You should comment this to use the entire screen and uncomment only if
+         * you want faster analysis at the cost of not using the entire frame.
+         * This is also particularly useful if you know approximately where the beacon is
+         * as this will eliminate parts of the frame which may cause problems
+         * This will not work on some methods, such as COMPLEX
+         **/
+        //beacon.setAnalysisBounds(new Rectangle(new Point(width / 2, height / 2), width - 200, 200));
+
+        /**
+         * Set the rotation parameters of the screen
+         * If colors are being flipped or output appears consistently incorrect, try changing these.
+         *
+         * First, tell the extension whether you are using a secondary camera
+         * (or in some devices, a front-facing camera that reverses some colors).
+         *
+         * It's a good idea to disable global auto rotate in Android settings. You can do this
+         * by calling disableAutoRotate() or enableAutoRotate().
+         *
+         * It's also a good idea to force the phone into a specific orientation (or auto rotate) by
+         * calling either setActivityOrientationAutoRotate() or setActivityOrientationFixed(). If
+         * you don't, the camera reader may have problems reading the current orientation.
+         */
+        rotation.setIsUsingSecondaryCamera(false);
+        rotation.disableAutoRotate();
+        rotation.setActivityOrientationFixed(ScreenOrientation.PORTRAIT);
+
+        /**
+         * Set camera control extension preferences
+         *
+         * Enabling manual settings will improve analysis rate and may lead to better results under
+         * tested conditions. If the environment changes, expect to change these values.
+         */
+        cameraControl.setColorTemperature(CameraControlExtension.ColorTemperature.AUTO);
+        cameraControl.setAutoExposureCompensation();
+        //endregion
 
         /*
          * Initialize the standard drive system variables.
@@ -77,7 +171,6 @@ public class ShootBallsAutonomous extends LinearOpMode {
         telemetry.addData(">", "Robot Ready.");    //
         telemetry.update();
 
-
         robot.gyro.resetDeviceConfigurationForOpMode();
         robot.gyro.setHeadingMode(ModernRoboticsI2cGyro.HeadingMode.HEADING_CARTESIAN);
         robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -95,7 +188,6 @@ public class ShootBallsAutonomous extends LinearOpMode {
 
 
         robot.conveyorGate.setPosition(0.863);
-        prepareShoot(true);
 
         robot.armReleasers.setPosition(0);
 
@@ -107,77 +199,21 @@ public class ShootBallsAutonomous extends LinearOpMode {
         // Put a hold after each turn
 
 
-        shoot();
-        prepareShoot(false);
-
-        /*
-        int startLeftTurn;
-        int startRightTurn;
-        int endLeftTurn;
-        int endRightTurn;
+        driveCenteredBeacon(0.125, 8000, 0);
 
 
-        if (MatchDetails.color == MatchDetails.TeamColor.RED) {
-
-            encoderDrive(0.25, 0.75, 0.25, -400, -400, 5000);
-
-            Thread.sleep(125);
-            gyroTurn(TURN_SPEED * 0.9, -133);
-
-            encoderDrive(0.25, 0.75, 0.25, 3000, 2900, 8000);
-
-            gyroDriveUntilLine(0.15, 0.45);
-
-            gyroTurn(TURN_SPEED * 0.5, -93);
-            //encoderDrive(0.35, 325, 300, 3000);
-            pushBeacon(0.45, -90);
-            encoderDrive(0.7, -300, -300, 3000);
-            gyroTurn(TURN_SPEED * 0.75, -178);
-            encoderDrive(0.5, 0.75, 0.5, 2175, 2150, 10000);
-            gyroDriveUntilLine(0.15, 0.45);
-            encoderDrive(0.20, -50, -50, 2000);
-            gyroTurn(TURN_SPEED * 0.5, -93);
-            encoderDrive(0.8, 500, 500, 1000);
-            pushBeacon(0.5, -90);
-        }
-        else if (MatchDetails.color == MatchDetails.TeamColor.BLUE) {
-
-            encoderDrive(0.25, 0.75, 0.25, -625, -625, 5000);
-
-            Thread.sleep(125);
-            gyroTurn(TURN_SPEED * 0.5, 125);
-
-            encoderDrive(0.25, 0.75, 0.25, 2800, 2850, 8000);
-
-            gyroDriveUntilLine(0.15, 0.45);
-
-            gyroTurn(TURN_SPEED * 0.5, 93);
-            //encoderDrive(0.35, 325, 300, 3000);
-            pushBeacon(0.45, 90);
-            encoderDrive(0.7, -450, -450, 3000);
-            gyroTurn(TURN_SPEED * 0.75, 175);
-            encoderDrive(0.5, 0.75, 0.5, 2400, 2140, 10000);
-            gyroDriveUntilLine(0.15, 0.45);
-            // For some reason this isn't needed??? Lol ok that's cool too.
-            encoderDrive(0.20, 50, 50, 2000);
-            gyroTurn(TURN_SPEED * 0.5, 95);
-            encoderDrive(0.8, 300, 300, 1000);
-            pushBeacon(0.5, 90);
-
-        }
-        */
         telemetry.addData("Path", "Complete");
         telemetry.update();
     }
 
     void prepareShoot(boolean shooting) throws InterruptedException {
         robot.shoot(shooting);
-        Thread.sleep(2000);
+        Thread.sleep(750);
     }
 
     void shoot() throws InterruptedException {
         robot.conveyorMotor.setPower(1);
-        Thread.sleep(4000);
+        Thread.sleep(2000);
         robot.conveyorMotor.setPower(0);
     }
 
@@ -286,17 +322,59 @@ public class ShootBallsAutonomous extends LinearOpMode {
         }
     }
 
+    MatchDetails.TeamColor convertColor (Beacon.BeaconColor color) {
+
+        switch (color) {
+            case BLUE:
+                return MatchDetails.TeamColor.BLUE;
+            case BLUE_BRIGHT:
+                return MatchDetails.TeamColor.BLUE;
+            case RED:
+                return MatchDetails.TeamColor.RED;
+            case RED_BRIGHT:
+                return MatchDetails.TeamColor.RED;
+        }
+
+        return MatchDetails.TeamColor.UNKNOWN;
+    }
+
     void pushBeacon(double speed, double angle) throws InterruptedException {
 
         MatchDetails.TeamColor colorDetected = MatchDetails.TeamColor.RED; // This will be properly assigned later so that's cool
+        boolean left = false;
 
         Thread.sleep(250);
 
+        Beacon.BeaconAnalysis analysis = beacon.getAnalysis();
+
+        // Just try and determine it. This assumes (gasp!) that the two colors are different,
+        // which they almost always will be. I hope.
+        if (analysis.isBeaconFound()) {
+            if (analysis.isLeftKnown()) {
+                if (convertColor(analysis.getStateLeft()) == MatchDetails.color) {
+                    left = true;
+                }
+                else {
+                    left = false;
+                }
+            }
+            if (analysis.isRightKnown()) {
+                if (convertColor(analysis.getStateRight()) == MatchDetails.color) {
+                    left = false;
+                }
+                else {
+                    left = true;
+                }
+            }
+        }
+        /*
         while (robot.colorSensor.red() == robot.colorSensor.blue()) {
             encoderDrive(0.25, 150, 150, 1000);
             idle();
             // huh. um. well we're screwed, but not really
         }
+        */
+        /*
         if (robot.colorSensor.red() > robot.colorSensor.blue()) {
             if (MatchDetails.color == MatchDetails.TeamColor.RED) {
                 robot.rightPushServo.setPosition(0.5);
@@ -314,7 +392,10 @@ public class ShootBallsAutonomous extends LinearOpMode {
                 colorDetected = MatchDetails.TeamColor.BLUE;
             }
         }
+        */
 
+
+        //driveCenteredBeacon (0.5, 4000);
 
         robot.leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         robot.rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -351,51 +432,176 @@ public class ShootBallsAutonomous extends LinearOpMode {
         robot.rightPushServo.setPosition(0.961);
     }
 
-    void playSoundFile() {
 
-    }
+    void driveCenteredBeacon (double speed, int timeoutMs, double target) {
+        boolean reachedBeacon = false;
 
-    /**
-     * Method to follow a line of the specified reflectivity. Suggested that you
-     * calibrate the Optical Distance Sensor first
-     *
-     * @param speed    Target speed for motion.
-     * @param distance Distance to move in encoder counts
-     * @param target   Target reflectivity for the Optical Distance Sensor. Between 0.0 and 1.0
-     */
+        runtime.reset();
 
-    public void followLine(double speed,
-                           double distance,
-                           double target) throws InterruptedException {
+        boolean leftRed = false;
 
-        if (opModeIsActive()) {
-            int moveCount = (int) (distance * COUNTS_PER_INCH);
-            while (opModeIsActive() && robot.leftMotor.getCurrentPosition() < moveCount && robot.rightMotor.getCurrentPosition() < moveCount) {
-                double error = (target - robot.opticalDistanceSensor.getLightDetected()) * P_LINE_COEFF;
+        robot.leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        robot.leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-                double leftPower = speed;
-                double rightPower = speed;
+        // Should we use the left side or the right side? -- Note, this is only called once,
+        // so if the initial analysis is wrong, uhhh, that's awkward. We just gave our opponents 30 points
+        // TODO fix that.
+        Beacon.BeaconAnalysis preAnalysis = beacon.getAnalysis();
 
-                if (error < 0) {
-                    leftPower -= error;
-                } else {
-                    rightPower -= error;
+        // For debug purposes.
+        Log log = new Log("FIRST", "Beacon Test Log");
+        log.add("Preanalysis", "Preanalysis");
+        log.add("confidence analysis", preAnalysis.getConfidenceString());
+        log.add("button analysis", preAnalysis.getButtonString());
+        log.add("color analysis", preAnalysis.getColorString());
+        log.add("location analysis", preAnalysis.getLocationString());
+
+        if (preAnalysis.getConfidence() > CONFIDENCE_THRESHOLD) {
+            if (preAnalysis.isLeftKnown()) {
+                if (preAnalysis.isLeftBlue()) {
+                    log.add("assert", "left is blue");
+                    leftRed = false;
+                } else if (preAnalysis.isLeftRed()){
+                    log.add("assert", "left is red");
+                    // It's red.
+                    leftRed = true;
                 }
+            }
+            else if (preAnalysis.isRightKnown()) {
+                if (preAnalysis.isRightBlue()) {
+                    log.add("assert", "right is blue");
+                    leftRed = true;
+                }
+                else {
+                    log.add("assert", "right is red");
+                    leftRed = false;
+                }
+            }
+        }
+        else {
+            // Try again.
+            // TODO Make it so the robot flails around trying to find a high confidence result.
+        }
 
-                robot.leftMotor.setPower(leftPower);
-                robot.rightMotor.setPower(rightPower);
-
-                telemetry.addData("following", "line");
-                telemetry.addData("ods value", robot.opticalDistanceSensor.getLightDetected());
-                telemetry.addData("error", error);
-                telemetry.addData("left power", leftPower);
-                telemetry.addData("right power", rightPower);
-
-                idle();
+        if (leftRed) {
+            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
+                robot.push(true);
+            }
+            else {
+                robot.push(false);
+            }
+        }
+        else {
+            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
+                robot.push(false);
+            }
+            else {
+                robot.push(true);
             }
         }
 
+        while (opModeIsActive() /*&& !reachedBeacon && timeoutMs < runtime.milliseconds()*/) {
+
+            // Check if we need to break out of the loop
+            Beacon.BeaconAnalysis analysis = beacon.getAnalysis();
+            if (analysis.isBeaconFullyBlue()) {
+                log.add("update", "beacon is fully blue");
+                if (MatchDetails.color == MatchDetails.TeamColor.BLUE) {
+
+                    reachedBeacon = true;
+                    break;
+                }
+                else {
+                    // fuck
+                    // TODO Try again, this is a disaster
+                }
+            }
+            if (analysis.isBeaconFullyRed()) {
+                log.add("update", "beacon is fully red");
+                if (MatchDetails.color == MatchDetails.TeamColor.RED) {
+                    // 'ery good
+                    reachedBeacon = true;
+                    break;
+                }
+                else {
+                    // fuck again
+                    // TODO ditto
+                }
+            }
+
+            reviseColor();
+
+            // JKJK maybe the light sensors don't even work ayy kek lmao send tom eng's regards
+            /*
+            // We still need to move forward.
+            if (robot.leftLightSensor.getLightDetected() > LINE_THRESHOLD) {
+                // The input from the light sensors overrides the phone camera
+                // Sorry, Phone Camera. You were crappy anyways.
+                robot.rightMotor.setPower(0.5);
+                robot.leftMotor.setPower(0);
+                continue;
+            }
+            else if (robot.rightLightSensor.getLightDetected() > LINE_THRESHOLD) {
+                robot.rightMotor.setPower(0);
+                robot.leftMotor.setPower(0.5);
+                continue;
+            }
+            */
+
+            RobotLog.i("runtime", runtime.milliseconds());
+
+            // Tyty LASA Robotics.
+            double distanceFromCenter;
+            double centerOfBeacon; // In screen coordinates.
+            centerOfBeacon = (analysis.getTopLeft().x + analysis.getBottomRight().x) / 2;
+            distanceFromCenter = centerOfBeacon - SCREEN_RESOLUTION_X / 2;
+
+            double gyroError = target - robot.gyro.getHeading();
+            log.add("update", "gyro error = " + gyroError);
+            // Sanity check, having the drive offset be too much is REALLY dangerous.
+            double driveOffset = Range.clip(gyroError * P_DRIVE_COEFF, -0.2, 0.2);
+            log.add("update", "drive offset = " + driveOffset);
+
+            robot.leftMotor.setPower(speed + driveOffset);
+            robot.rightMotor.setPower(speed - driveOffset);
+        }
+        log.saveAs(Log.FileType.TEXT);
     }
+
+    public void reviseColor () {
+        if (robot.colorSensor.red() > robot.colorSensor.blue()) {
+            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
+                robot.push(false);
+            } else {
+                robot.push(true);
+            }
+        } else if (robot.colorSensor.blue() > robot.colorSensor.red()) {
+            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
+                robot.push(true);
+            } else {
+                robot.push(false);
+            }
+        }
+    }
+
+    public void gyroDriveSimple (double speed, double distance, double angle, double timeout) {
+        robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        double leftSpeed;
+        double rightSpeed;
+
+        double startTime = time;
+
+        while (opModeIsActive() && time - startTime < timeout) {
+            double error = angle - robot.gyro.getIntegratedZValue();
+            double offset = error * P_DRIVE_COEFF;
+            robot.leftMotor.setPower(speed + offset);
+            robot.rightMotor.setPower(speed - offset);
+            telemetry.addData("angle", robot.gyro.getIntegratedZValue());
+            telemetry.update();
+        }
+    }
+
 
     /**
      * Method to drive on a fixed compass bearing (angle), based on encoder counts.
@@ -601,8 +807,16 @@ public class ShootBallsAutonomous extends LinearOpMode {
         }
     }
 
+    /**
+     *
+     * @param speed speed
+     * @param target target for the optical distance sensor
+     * @param nxtTarget target for the nxt light sensors
+     * @throws InterruptedException
+     */
+
     public void gyroDriveUntilLine(double speed
-                            /*double angle*/, double target) throws InterruptedException {
+                            /*double angle*/, double target, double nxtTarget) throws InterruptedException {
 
         // Ensure that the opmode is still active
         if (opModeIsActive()) {
@@ -621,11 +835,14 @@ public class ShootBallsAutonomous extends LinearOpMode {
                 telemetry.addData("gyro", robot.gyro.getHeading());
                 telemetry.update();
                 if (scaledValue >= target) {
-                    robot.leftMotor.setPower(0);
-                    robot.rightMotor.setPower(0);
+                    stopRobotMotion();
                     return;
                 }
-
+                if (robot.leftLightSensor.getLightDetected() >= nxtTarget ||
+                        robot.rightLightSensor.getLightDetected() >= nxtTarget) {
+                    stopRobotMotion();
+                    return;
+                }
                 // Allow time for other processes to run.
                 idle();
             }
@@ -638,6 +855,11 @@ public class ShootBallsAutonomous extends LinearOpMode {
             robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
+    }
+
+    public void stopRobotMotion () {
+        robot.leftMotor.setPower(0);
+        robot.rightMotor.setPower(0);
     }
 
     /**

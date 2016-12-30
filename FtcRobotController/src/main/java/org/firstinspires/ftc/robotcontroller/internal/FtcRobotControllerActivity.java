@@ -147,7 +147,6 @@ public class FtcRobotControllerActivity extends Activity {
   protected Queue<UsbDevice> receivedUsbAttachmentNotifications;
 
   MediaPlayer rickroll;
-  int length;
 
   protected class RobotRestarter implements Restarter {
 

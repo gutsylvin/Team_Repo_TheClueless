@@ -125,8 +125,6 @@ public class TankTeleop extends OpMode {
      */
     @Override
     public void init_loop() {
-        robot.rightScissorliftServo.setPosition(0.902); // 230/255
-        robot.leftScissorliftServo.setPosition(0);
         robot.leftPushServo.setPosition(0);
         robot.rightPushServo.setPosition(0.961); // 245/255
     }
@@ -136,8 +134,6 @@ public class TankTeleop extends OpMode {
      */
     @Override
     public void start() {
-        robot.rightScissorliftServo.setPosition(0.902); // 230/255
-        robot.leftScissorliftServo.setPosition(0);
         robot.leftPushServo.setPosition(0);
         robot.rightPushServo.setPosition(0.961); // 245/255
     }
@@ -153,8 +149,6 @@ public class TankTeleop extends OpMode {
 
         if (firstLoop) {
             firstLoop = false;
-            robot.rightScissorliftServo.setPosition(0.902); // 230/255
-            robot.leftScissorliftServo.setPosition(0);
             robot.leftPushServo.setPosition(0);
             robot.rightPushServo.setPosition(0.961); // 245/255
             robot.conveyorGate.setPosition(0.863);
@@ -180,8 +174,6 @@ public class TankTeleop extends OpMode {
         Toggle[] toggles = {new ServoToggle(Toggle.Button.BUMPER_RIGHT, robot.armReleasers, new double[]{0, 1}, Toggle.GamepadId.User1),
                             new ServoToggle(Toggle.Button.X, robot.leftPushServo, new double[]{0, 0.431}, Toggle.GamepadId.User1),
                             new ServoToggle(Toggle.Button.B, robot.rightPushServo, new double[]{0.961, 0.5}, Toggle.GamepadId.User1),
-                            new ServoToggle(Toggle.Button.Y, robot.leftScissorliftServo, new double[]{0.843, 0}, Toggle.GamepadId.User1),
-                            new ServoToggle(Toggle.Button.Y, robot.rightScissorliftServo, new double[]{0.059, 0.902}, Toggle.GamepadId.User1),
                             new ServoToggle(Toggle.Button.BUMPER_RIGHT, robot.conveyorGate, new double[] {0, 0.863}, Toggle.GamepadId.User2),
                             new MotorToggle(Toggle.Button.A, robot.ballCollectionMotor, new double[] {-1, 0}, Toggle.GamepadId.User2),
                             new MotorToggle(Toggle.Button.BUMPER_LEFT, new DcMotor[]{robot.leftShootMotor, robot.rightShootMotor}, new double[]{0.75, 0}, Toggle.GamepadId.User2),
@@ -299,8 +291,6 @@ public class TankTeleop extends OpMode {
         telemetry.addData("left motor", robot.leftMotor.getPower());
         telemetry.addData("right motor", robot.rightMotor.getPower());
         telemetry.addData("beacon", "left: " + leftBeacon + " right: " + rightBeacon);
-        telemetry.addData("left scissorlift servo", robot.leftScissorliftServo.getPosition());
-        telemetry.addData("right scissorlift servo", robot.rightScissorliftServo.getPosition());
         telemetry.addData("left push", robot.leftPushServo.getPosition());
         telemetry.addData("right push", robot.rightPushServo.getPosition());
         updateTelemetry(telemetry);

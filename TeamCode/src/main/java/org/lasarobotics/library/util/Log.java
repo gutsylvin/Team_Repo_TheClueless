@@ -2,6 +2,8 @@ package org.lasarobotics.library.util;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.qualcomm.robotcore.util.RobotLog;
+
 import org.lasarobotics.library.android.Util;
 
 import java.io.BufferedWriter;
@@ -9,8 +11,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+
+
+import com.google.common.io.Files;
 
 /**
  * Simple logger that can write to multiple file formats for analyzing robot telemetry
@@ -37,6 +43,7 @@ public class Log {
      */
     public void add(String tag, String data) {
         logEntries.add(new LogData(timers.getClockValue("log"), tag, data));
+        RobotLog.i(tag, data);
     }
 
     /**
@@ -46,34 +53,34 @@ public class Log {
      *
      * @param fileType Format to write file in
      */
+
     public void saveAs(FileType fileType) {
         try {
             //Use correct filename for requested file type
-            File f = Util.createFileOnDevice(fileDirectory, fileName + "." + fileType.toString(), false);
-            String out = "";
+            File f = Util.createFileOnDevice("FIRST/", fileName + "." + fileType.toString(), false);
+            StringBuilder out = new StringBuilder();
             switch (fileType) {
                 case JSON:
                     Type logDataList = new TypeToken<List<LogData>>() {
                     }.getType();
                     Gson g = new Gson();
-                    out = g.toJson(logEntries, logDataList);
+                    out.append(g.toJson(logEntries, logDataList));
                     break;
                 case CSV:
-                    out = "time,tag,data\n";
+                    out.append("time,tag,data\n");
                     for (LogData l : logEntries) {
-                        out += "\"" + l.time + "\"," + "\"" + l.tag + "\"," + "\"" + l.data + "\"\n";
+                        out.append("\"" + l.time + "\"," + "\"" + l.tag + "\"," + "\"" + l.data + "\"\n");
                     }
                     break;
                 case TEXT:
                     for (LogData l : logEntries) {
-                        out += l.time + ":[" + l.tag + "]" + l.data + "\n";
+                        out.append(l.time + ":[" + l.tag + "]" + l.data + "\n");
                     }
                     break;
             }
-            FileWriter fw = new FileWriter(f.getAbsoluteFile());
-            BufferedWriter bw = new BufferedWriter(fw);
-            bw.write(out);
-            bw.close();
+            RobotLog.i(out.toString());
+            BufferedWriter writer = new BufferedWriter(new FileWriter(f));
+            writer.write(out.toString());
         } catch (IOException e) {
             e.printStackTrace();
         }

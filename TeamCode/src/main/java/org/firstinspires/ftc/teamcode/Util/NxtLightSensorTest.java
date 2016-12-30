@@ -29,19 +29,15 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
-package org.firstinspires.ftc.robotcontroller.external.samples;
+package org.firstinspires.ftc.teamcode.Util;
 
-import android.app.Activity;
-import android.graphics.Color;
-import android.view.View;
-
-import com.qualcomm.ftcrobotcontroller.R;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.hardware.hitechnic.HiTechnicNxtLightSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.LightSensor;
+
+import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
+import org.lasarobotics.library.util.Log;
 
 /*
  *
@@ -54,56 +50,51 @@ import com.qualcomm.robotcore.hardware.LightSensor;
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
+// Funky indentation
 @TeleOp(name = "Sensor: LEGO light", group = "Sensor")
-@Disabled
-public class SensorLEGOLight extends LinearOpMode {
+public class NxtLightSensorTest extends LinearOpMode {
 
-  LightSensor lightSensor;  // Hardware Device Object
+  HiTechnicNxtLightSensor leftLightSensor;
+  HiTechnicNxtLightSensor rightLightSensor;
 
   @Override
   public void runOpMode() throws InterruptedException {
+      Robot robot = new Robot();
+      robot.init(hardwareMap, telemetry);
 
-    // bPrevState and bCurrState represent the previous and current state of the button.
-    boolean bPrevState = false;
-    boolean bCurrState = false;
 
-    // bLedOn represents the state of the LED.
-    boolean bLedOn = true;
 
-    // get a reference to our Light Sensor object.
-    lightSensor = hardwareMap.lightSensor.get("light sensor");
+      // wait for the start button to be pressed.
+      waitForStart();
+      if (robot.leftLightSensor.getClass().equals(HiTechnicNxtLightSensor.class) && robot.rightLightSensor.getClass().equals(HiTechnicNxtLightSensor.class)){
+          leftLightSensor = (HiTechnicNxtLightSensor)robot.leftLightSensor;
+          rightLightSensor = (HiTechnicNxtLightSensor)robot.rightLightSensor;
+      }
 
-    // Set the LED state in the beginning.
-    lightSensor.enableLed(bLedOn);
-
-    // wait for the start button to be pressed.
-    waitForStart();
-
+      Log log = new Log("FIRST", "Light sensor test log");
     // while the op mode is active, loop and read the light levels.
     // Note we use opModeIsActive() as our loop condition because it is an interruptible method.
     while (opModeIsActive()) {
 
-      // check the status of the x button .
-      bCurrState = gamepad1.x;
+        leftLightSensor.enableLed(true);
+        rightLightSensor.enableLed(true);
 
-      // check for button state transitions.
-      if ((bCurrState == true) && (bCurrState != bPrevState))  {
+        log.add("left", Double.toString(leftLightSensor.getLightDetected()));
+        log.add("leftRaw", Double.toString(leftLightSensor.getRawLightDetected()));
 
-        // button is transitioning to a pressed state.  Toggle LED
-        bLedOn = !bLedOn;
-        lightSensor.enableLed(bLedOn);
-      }
+        log.add("right", Double.toString(rightLightSensor.getLightDetected()));
+        log.add("rightRaw", Double.toString(rightLightSensor.getRawLightDetected()));
 
-      // update previous state variable.
-      bPrevState = bCurrState;
+        telemetry.addData("Raw Left", leftLightSensor.getRawLightDetected());
+        telemetry.addData("Normal Left", leftLightSensor.getLightDetected());
 
-      // send the info back to driver station using telemetry function.
-      telemetry.addData("LED", bLedOn ? "On" : "Off");
-      telemetry.addData("Raw", lightSensor.getRawLightDetected());
-      telemetry.addData("Normal", lightSensor.getLightDetected());
+        telemetry.addData("Raw Right", rightLightSensor.getRawLightDetected());
+        telemetry.addData("Normal Right", rightLightSensor.getLightDetected());
 
-      telemetry.update();
-      idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
+        telemetry.update();
+        idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
     }
+
+      log.saveAs(Log.FileType.TEXT);
   }
 }

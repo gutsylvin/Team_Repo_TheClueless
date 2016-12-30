@@ -77,8 +77,6 @@ public class PushBeaconTest extends LinearOpMode {
             idle();
         }
 
-        robot.rightScissorliftServo.setPosition(0.902); // 230/255
-        robot.leftScissorliftServo.setPosition(0);
         robot.leftPushServo.setPosition(0);
         robot.rightPushServo.setPosition(0.961); // 245/255
         gyro.resetZAxisIntegrator();

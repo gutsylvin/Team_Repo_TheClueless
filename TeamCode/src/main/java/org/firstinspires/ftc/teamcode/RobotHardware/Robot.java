@@ -87,10 +87,6 @@ public class Robot {
     //endregion
 
     // region
-    // Scissorlift Servos
-    public Servo leftScissorliftServo;
-    public Servo rightScissorliftServo;
-
     // Button pushing servos
     public Servo leftPushServo;
     public Servo rightPushServo;
@@ -99,14 +95,27 @@ public class Robot {
     public Servo armReleasers;
     // endregion
 
-    // Some consts
-    public final double noPushLeft = 0;
-    public final double noPushRight = 230/255;
     public final double shootSpeed = 0.43;
 
     public Robot () {
         // Set static instance to this. The other one will live on in memory and then get GC'ed
         robot = this;
+    }
+
+    public void noPush () {
+        robot.leftPushServo.setPosition(0);
+        robot.rightPushServo.setPosition(0.961);
+    }
+
+    public void push (boolean left) {
+        if (left) {
+            robot.leftPushServo.setPosition(0.431);
+            robot.rightPushServo.setPosition(0.961);
+        }
+        else {
+            robot.rightPushServo.setPosition(0.5);
+            robot.leftPushServo.setPosition(0);
+        }
     }
 
     public void init (HardwareMap hardwareMap, Telemetry telemetry) {
@@ -118,7 +127,7 @@ public class Robot {
         leftMotor = hardwareMap.dcMotor.get("left_drive");
         rightMotor = hardwareMap.dcMotor.get("right_drive");
 
-        rightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -139,9 +148,6 @@ public class Robot {
         scissorLiftArmMotor = hardwareMap.dcMotor.get("scissor_lift_arms");
         scissorLiftArmMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        leftScissorliftServo = hardwareMap.servo.get("left_scissorlift_servo");
-        rightScissorliftServo = hardwareMap.servo.get("right_scissorlift_servo");
-
         leftPushServo = hardwareMap.servo.get("left_push");
         rightPushServo = hardwareMap.servo.get("right_push");
 
@@ -155,8 +161,8 @@ public class Robot {
 
         colorSensor = ((ModernRoboticsI2cColorSensor) hardwareMap.colorSensor.get("color_sensor"));
 
-        //leftLightSensor = hardwareMap.lightSensor.get("left_light_sensor");
-        //rightLightSensor = hardwareMap.lightSensor.get("right_light_sensor");
+        leftLightSensor = hardwareMap.lightSensor.get("left_light_sensor");
+        rightLightSensor = hardwareMap.lightSensor.get("right_light_sensor");
 
         initialized = true;
 

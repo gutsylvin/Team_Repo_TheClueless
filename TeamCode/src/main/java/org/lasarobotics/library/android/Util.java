@@ -5,14 +5,20 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Environment;
 
+import com.qualcomm.robotcore.util.RobotLog;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+
 
 /**
  * Android utilities
  */
 public final class Util {
+
+    public static final String ftcDirectory = "/storage/sdcard1/FIRST/";
+
     /**
      * Gets the contexts of an activity without calling from an Activity class
      *
@@ -64,13 +70,15 @@ public final class Util {
     }
 
     public static File createFileOnDevice(String fileDirectory, String fileName, boolean overwrite) throws IOException {
-        fileDirectory = Environment.getExternalStorageDirectory().getAbsolutePath() + fileDirectory;
+        fileDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + "/" + fileDirectory + "/";
+        RobotLog.i(fileDirectory);
         File dir = new File(fileDirectory);
 
         if (!dir.exists()) {
             dir.mkdirs();
         }
         File file = new File(fileDirectory, fileName);
+        RobotLog.i(file.getAbsolutePath());
         // if file doesn't exists, then create it
         if (!file.exists() || overwrite) {
             if (file.exists() && overwrite)
@@ -84,6 +92,31 @@ public final class Util {
             }
             file.createNewFile();
         }
+        return file;
+    }
+    public static File createFileInFirstDirectory(String fileName, boolean overwrite) {
+        String fileDirectory = ftcDirectory;
+        File file = new File(fileDirectory, fileName);
+        // if file doesn't exists, then create it
+        try {
+            if (!file.exists() || overwrite) {
+                if (file.exists() && overwrite)
+                    file.delete();
+                file.createNewFile();
+            } else {
+                int i = 0;
+                while (file.exists()) {
+                    file = new File(fileDirectory, fileName + "." + i);
+                    i++;
+                }
+                file.createNewFile();
+            }
+        }
+        catch (IOException i) {
+            // meh.
+        }
+
+
         return file;
     }
 }
