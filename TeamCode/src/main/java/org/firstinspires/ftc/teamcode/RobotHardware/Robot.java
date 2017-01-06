@@ -15,9 +15,14 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.LightSensor;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.qualcomm.robotcore.hardware.configuration.Utility;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.lasarobotics.library.drive.ScaledDcMotor;
+import org.lasarobotics.library.util.MathUtil;
+import org.lasarobotics.vision.android.Util;
 
 import java.lang.reflect.Field;
 import java.util.AbstractMap;
@@ -60,6 +65,8 @@ public class Robot {
 
     public LightSensor leftLightSensor;
     public LightSensor rightLightSensor;
+
+    public VoltageSensor voltageSensor;
     // endregion
 
 
@@ -82,7 +89,9 @@ public class Robot {
     // Scissorlift
     public DcMotor scissorliftMotor;
 
-    public DcMotor scissorLiftArmMotor;
+    public ScaledDcMotor scissorLiftArmMotor;
+
+    static final double sissorLiftArmMotorSpeed = 0.5;
 
     //endregion
 
@@ -145,8 +154,9 @@ public class Robot {
 
         scissorliftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        scissorLiftArmMotor = hardwareMap.dcMotor.get("scissor_lift_arms");
+        scissorLiftArmMotor = new ScaledDcMotor(hardwareMap.dcMotor.get("scissor_lift_arms"));
         scissorLiftArmMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        scissorLiftArmMotor.setMinMax(-0.5, 0.5);
 
         leftPushServo = hardwareMap.servo.get("left_push");
         rightPushServo = hardwareMap.servo.get("right_push");
@@ -163,6 +173,8 @@ public class Robot {
 
         leftLightSensor = hardwareMap.lightSensor.get("left_light_sensor");
         rightLightSensor = hardwareMap.lightSensor.get("right_light_sensor");
+
+        voltageSensor = hardwareMap.voltageSensor.get("Shoot Motors");
 
         initialized = true;
 

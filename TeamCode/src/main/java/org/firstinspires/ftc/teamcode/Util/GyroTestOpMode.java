@@ -19,10 +19,6 @@ import java.util.Iterator;
 @Autonomous(name = "Util: Gyro Test", group = "Util")
 public class GyroTestOpMode extends OpMode {
 
-    private ElapsedTime runtime = new ElapsedTime();
-
-    ArrayList<GyroSensor> gyros;
-
     @Override
     public void init() {
 
@@ -42,7 +38,7 @@ public class GyroTestOpMode extends OpMode {
      */
     @Override
     public void start() {
-        runtime.reset();
+
     }
 
     /*
@@ -51,6 +47,6 @@ public class GyroTestOpMode extends OpMode {
      */
     @Override
     public void loop() {
-        telemetry.addData("heading", Robot.robot.gyro.getHeading());
+
     }
 }

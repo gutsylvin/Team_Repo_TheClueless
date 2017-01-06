@@ -4,6 +4,7 @@ import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.RobotLog;
@@ -30,27 +31,35 @@ public class AutonomousOpMode extends LinearVisionOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
 
+
     static final double COUNTS_PER_MOTOR_REV = 1440;    // eg: TETRIX Motor Encoder
     static final double DRIVE_GEAR_REDUCTION = 0.5;     // This is < 1.0 if geared UP
     static final double WHEEL_DIAMETER_INCHES = 4.0;     // For figuring circumference
     static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
 
+    // Temporary solution, based on relative CPR's of Neverest 40 and Tetrix Max Dc Motors for use while we
+    // are migrating from Tetrix to andymark
+    static final double MOVEMENT_FACTOR = 0.7777777777777;
+    static final double SPEED_FACTOR = 0.95;
+
     // This setup assumes use of ZTE Speed (what a shitty phone, if you can, get a better one)
     static final int SCREEN_RESOLUTION_X = 560;
     static final int SCREEN_RESOLUTION_Y = 960;
+
+    static final double LINE_FOLLOW_TARGET = 0.4;
 
     // P value for the vision-drive control system
     static final double VISION_P = 0.01;
 
     static final double CONFIDENCE_THRESHOLD = 0.75; // This is how confident the FTCVision reading needs to be in order
-                                                     // for the program to be sure of its results. Lower is less accurate (duh)
-                                                     // but higher may lead to inefficiency.
+    // for the program to be sure of its results. Lower is less accurate (duh)
+    // but higher may lead to inefficiency.
     static final double LINE_THRESHOLD = 0.6;        // Used for the lines on the Velocity Vortex mat.
 
     // These constants define the desired driving/control characteristics
     // The can/should be tweaked to suite the specific robot drive train.
-    static final double TURN_SPEED = 0.2;     // Nominal half speed for better accuracy.
+    static final double TURN_SPEED = 0.15;     // Nominal half speed for better accuracy.
     static final double TURN_TIMEOUT = 10;
 
     static final double START_ENCODER = 200;    // Driving subroutines will use this encoder value as the "revving up" period
@@ -59,7 +68,7 @@ public class AutonomousOpMode extends LinearVisionOpMode {
     static final double HEADING_THRESHOLD = 2;      // (NOT) As tight as we can make it with an integer gyro
     static final double P_TURN_COEFF = 0.06;     // Larger is more responsive, but also less stable
     static final double P_DRIVE_COEFF = 0.20;     // Larger is more responsive, but also less stable
-    static final double P_LINE_COEFF = 0.15;
+    static final double P_LINE_COEFF = 0.25;
 
     boolean left1;
     boolean left2;
@@ -159,6 +168,9 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         telemetry.addData(">", "Calibrating Gyro");    //
         telemetry.update();
 
+        robot.leftPushServo.setPosition(0);
+        robot.rightPushServo.setPosition(0.961); // 245/255
+
         while (gyro.getHeading() != 0) {
             gyro.calibrate();
 
@@ -176,6 +188,7 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+        robot.conveyorGate.setPosition(0.625);
         // Wait for the game to start (Display Gyro value), and reset gyro before we move..
 
         while (!isStarted()) {
@@ -187,8 +200,7 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         }
 
 
-        robot.conveyorGate.setPosition(0.863);
-        prepareShoot(true);
+        //prepareShoot(true);
 
         robot.armReleasers.setPosition(0);
 
@@ -200,8 +212,9 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         // Put a hold after each turn
 
 
-        shoot();
-        prepareShoot(false);
+        shootBalls();
+        //shoot();
+        //prepareShoot(false);
 
         if (MatchDetails.color == MatchDetails.TeamColor.RED) {
 
@@ -215,31 +228,30 @@ public class AutonomousOpMode extends LinearVisionOpMode {
             gyroDriveUntilLine(0.15, 0.45, 0);
 
             gyroTurn(TURN_SPEED * 0.5, -93);
-            //encoderDrive(0.35, 325, 300, 3000);
-            pushBeacon(0.45, -90);
-            encoderDrive(0.7, -300, -300, 3000);
+            driveCenteredBeacon(0.125, 4000, -90);
+            encoderDrive(0.25, -300, -300, 3000);
             gyroTurn(TURN_SPEED * 0.75, -178);
             encoderDrive(0.5, 0.75, 0.5, 2175, 2150, 10000);
             gyroDriveUntilLine(0.15, 0.45, 0);
             encoderDrive(0.20, -50, -50, 2000);
             gyroTurn(TURN_SPEED * 0.5, -93);
             encoderDrive(0.8, 500, 500, 1000);
-            pushBeacon(0.5, -90);
-        }
-        else if (MatchDetails.color == MatchDetails.TeamColor.BLUE) {
+            driveCenteredBeacon(0.125, 4000, -90);
 
-            encoderDrive(0.25, 0.75, 0.25, -625, -625, 5000);
+        } else if (MatchDetails.color == MatchDetails.TeamColor.BLUE) {
+
+            encoderDrive(0.25, 0.75, 0.25, -400, -400, 5000);
 
             Thread.sleep(125);
-            gyroTurn(TURN_SPEED * 0.5, 125);
+            gyroTurn(TURN_SPEED * 0.9, 130);
 
-            encoderDrive(0.25, 0.75, 0.25, 2800, 2850, 8000);
+            encoderDrive(0.25, 0.50, 0.20, 2500, 2500, 8000);
 
             gyroDriveUntilLine(0.15, 0.45, 0);
 
             gyroTurn(TURN_SPEED * 0.5, 91);
             //encoderDrive(0.35, 325, 300, 3000);
-            pushBeacon(0.45, 90);
+            driveCenteredBeacon(0.125, 4000, 0);
             encoderDrive(0.7, -450, -450, 3000);
             gyroTurn(TURN_SPEED * 0.75, 168);
             encoderDrive(0.5, 0.75, 0.5, 2450, 2140, 10000);
@@ -248,8 +260,7 @@ public class AutonomousOpMode extends LinearVisionOpMode {
             encoderDrive(0.20, 50, 50, 2000);
             gyroTurn(TURN_SPEED * 0.5, 95);
             encoderDrive(0.8, 300, 300, 1000);
-            pushBeacon(0.5, 90);
-
+            driveCenteredBeacon(0.125, 4000, 0);
         }
 
 
@@ -269,7 +280,7 @@ public class AutonomousOpMode extends LinearVisionOpMode {
     }
 
     // positive turn for clockwise, negative for counterclockwise.
-    public void localTurn (double speed, double angle) throws InterruptedException{
+    public void localTurn(double speed, double angle) throws InterruptedException {
         int newLeftTarget;
         int newRightTarget;
 
@@ -297,7 +308,7 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         encoderDrive(speed, speed, speed, left, right, timeoutS);
     }
 
-    public void encoderDrive (double speed, double counts, double timeoutMs) throws InterruptedException {
+    public void encoderDrive(double speed, double counts, double timeoutMs) throws InterruptedException {
         encoderDrive(speed, speed, speed, counts, counts, timeoutMs / 1000);
     }
 
@@ -311,6 +322,10 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         int encoderStartLeft;
         int encoderStartRight;
 
+        speed *= SPEED_FACTOR;
+        speed1 *= SPEED_FACTOR;
+        speed2 *= SPEED_FACTOR;
+
         // Ensure that the opmode is still active
         if (opModeIsActive()) {
 
@@ -318,8 +333,8 @@ public class AutonomousOpMode extends LinearVisionOpMode {
             encoderStartRight = robot.rightMotor.getCurrentPosition();
 
             // Determine new target position, and pass to motor controller
-            newLeftTarget = encoderStartLeft + (int) (left);
-            newRightTarget = encoderStartRight + ((int) (right));
+            newLeftTarget = encoderStartLeft + (int) ((left));
+            newRightTarget = encoderStartRight + (int) ((right));
 
             robot.leftMotor.setTargetPosition(newLeftTarget);
             robot.rightMotor.setTargetPosition(newRightTarget);
@@ -333,8 +348,8 @@ public class AutonomousOpMode extends LinearVisionOpMode {
 
             // reset the timeout time and start motion.
             runtime.reset();
-            robot.leftMotor.setPower(Math.abs(speed));
-            robot.rightMotor.setPower(Math.abs(speed));
+            robot.leftMotor.setPower(Math.abs(speed * SPEED_FACTOR));
+            robot.rightMotor.setPower(Math.abs(speed * SPEED_FACTOR));
 
             // keep looping while we are still active, and there is time left, and both motors are running.
             while (opModeIsActive() &&
@@ -373,7 +388,7 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         }
     }
 
-    MatchDetails.TeamColor convertColor (Beacon.BeaconColor color) {
+    MatchDetails.TeamColor convertColor(Beacon.BeaconColor color) {
 
         switch (color) {
             case BLUE:
@@ -404,16 +419,14 @@ public class AutonomousOpMode extends LinearVisionOpMode {
             if (analysis.isLeftKnown()) {
                 if (convertColor(analysis.getStateLeft()) == MatchDetails.color) {
                     left = true;
-                }
-                else {
+                } else {
                     left = false;
                 }
             }
             if (analysis.isRightKnown()) {
                 if (convertColor(analysis.getStateRight()) == MatchDetails.color) {
                     left = false;
-                }
-                else {
+                } else {
                     left = true;
                 }
             }
@@ -446,7 +459,7 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         */
 
 
-        driveCenteredBeacon (0.5, 4000);
+        driveCenteredBeacon(0.5, 4000, 0);
 
         robot.leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         robot.rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -483,8 +496,25 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         robot.rightPushServo.setPosition(0.961);
     }
 
+    void shootBalls() throws InterruptedException {
+        double voltage = robot.voltageSensor.getVoltage();
+        double shootSpeed;
 
-    void driveCenteredBeacon (double speed, int timeoutMs) {
+        shootSpeed = -0.15829 * (Math.pow(voltage, 3)) + 5.9856 * (Math.pow(voltage, 2)) + -75.445 * voltage + 317.47;
+
+        robot.shoot(true, shootSpeed);
+
+        Thread.sleep(750);
+
+        robot.conveyorMotor.setPower(1);
+
+        Thread.sleep(2000);
+        robot.conveyorMotor.setPower(0);
+        robot.shoot(false);
+
+    }
+
+    void driveCenteredBeacon(double speed, int timeoutMs, double target) {
         boolean reachedBeacon = false;
         double startTime = time * 1000;
 
@@ -502,17 +532,14 @@ public class AutonomousOpMode extends LinearVisionOpMode {
                     // It's red.
                     leftRed = true;
                 }
-            }
-            else if (preAnalysis.isRightKnown()) {
+            } else if (preAnalysis.isRightKnown()) {
                 if (preAnalysis.isRightBlue()) {
                     leftRed = true;
-                }
-                else {
+                } else {
                     leftRed = false;
                 }
             }
-        }
-        else {
+        } else {
             // Try again.
             // TODO Make it so the robot flails around trying to find a high confidence result.
         }
@@ -520,16 +547,13 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         if (leftRed) {
             if (MatchDetails.color == MatchDetails.TeamColor.RED) {
                 robot.push(true);
-            }
-            else {
+            } else {
                 robot.push(false);
             }
-        }
-        else {
+        } else {
             if (MatchDetails.color == MatchDetails.TeamColor.RED) {
                 robot.push(false);
-            }
-            else {
+            } else {
                 robot.push(true);
             }
         }
@@ -542,8 +566,7 @@ public class AutonomousOpMode extends LinearVisionOpMode {
                 if (MatchDetails.color == MatchDetails.TeamColor.BLUE) {
                     // Very good
                     break;
-                }
-                else {
+                } else {
                     // fuck
                     // TODO Try again, this is a disaster
                 }
@@ -552,44 +575,55 @@ public class AutonomousOpMode extends LinearVisionOpMode {
                 if (MatchDetails.color == MatchDetails.TeamColor.RED) {
                     // 'ery good
                     break;
-                }
-                else {
+                } else {
                     // fuck again
                     // TODO ditto
                 }
             }
 
+            reviseColor();
 
+            double error = robot.opticalDistanceSensor.getLightDetected() - LINE_FOLLOW_TARGET;
             // We still need to move forward.
-            if (robot.leftLightSensor.getLightDetected() > LINE_THRESHOLD) {
+            if (robot.opticalDistanceSensor.getLightDetected() > LINE_FOLLOW_TARGET) {
                 // The input from the light sensors overrides the phone camera
                 // Sorry, Phone Camera. You were crappy anyways.
-                robot.rightMotor.setPower(0.5);
-                robot.leftMotor.setPower(0);
+                robot.rightMotor.setPower(speed + error * P_LINE_COEFF);
+                robot.leftMotor.setPower(speed - error * P_LINE_COEFF);
+                continue;
+            } else {
+                double gyroError = robot.gyro.getHeading() - target;
+
+                if (gyroError > 0) {
+                    robot.rightMotor.setPower(speed + error * P_LINE_COEFF);
+                    robot.leftMotor.setPower(speed - error * P_LINE_COEFF);
+                }
+                else {
+                    robot.rightMotor.setPower(speed + error * P_LINE_COEFF);
+                    robot.leftMotor.setPower(speed - error * P_LINE_COEFF);
+                }
                 continue;
             }
-            else if (robot.rightLightSensor.getLightDetected() > LINE_THRESHOLD) {
-                robot.rightMotor.setPower(0);
-                robot.leftMotor.setPower(0.5);
-                continue;
-            }
-
-            // Tyty LASA Robotics.
-            double distanceFromCenter;
-            double centerOfBeacon; // In screen coordinates.
-            centerOfBeacon = (analysis.getTopLeft().x + analysis.getBottomRight().x) / 2;
-            distanceFromCenter = centerOfBeacon - SCREEN_RESOLUTION_X / 2;
-
-            // Sanity check, having the drive offset be too much is REALLY dangerous.
-            double driveOffset = Range.clip(distanceFromCenter * VISION_P, -0.25, 0.25);
-
-            robot.leftMotor.setPower(speed + driveOffset);
-            robot.rightMotor.setPower(speed - driveOffset);
         }
     }
 
+    public void reviseColor () {
+        if (robot.colorSensor.red() > robot.colorSensor.blue()) {
+            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
+                robot.push(false);
+            } else {
+                robot.push(true);
+            }
+        } else if (robot.colorSensor.blue() > robot.colorSensor.red()) {
+            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
+                robot.push(true);
+            } else {
+                robot.push(false);
+            }
+        }
+    }
 
-    public void gyroDriveSimple (double speed, double distance, double angle, double timeout) {
+    public void gyroDriveSimple(double speed, double distance, double angle, double timeout) {
         robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         double leftSpeed;
@@ -813,9 +847,8 @@ public class AutonomousOpMode extends LinearVisionOpMode {
     }
 
     /**
-     *
-     * @param speed speed
-     * @param target target for the optical distance sensor
+     * @param speed     speed
+     * @param target    target for the optical distance sensor
      * @param nxtTarget target for the nxt light sensors
      * @throws InterruptedException
      */
@@ -843,11 +876,11 @@ public class AutonomousOpMode extends LinearVisionOpMode {
                     stopRobotMotion();
                     return;
                 }
-                if (robot.leftLightSensor.getLightDetected() >= nxtTarget ||
-                        robot.rightLightSensor.getLightDetected() >= nxtTarget) {
-                    stopRobotMotion();
-                    return;
-                }
+                //if (robot.leftLightSensor.getLightDetected() >= nxtTarget ||
+                //        robot.rightLightSensor.getLightDetected() >= nxtTarget) {
+                //    stopRobotMotion();
+                //    return;
+                //}
                 // Allow time for other processes to run.
                 idle();
             }
@@ -862,7 +895,7 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         }
     }
 
-    public void stopRobotMotion () {
+    public void stopRobotMotion() {
         robot.leftMotor.setPower(0);
         robot.rightMotor.setPower(0);
     }
@@ -960,7 +993,7 @@ public class AutonomousOpMode extends LinearVisionOpMode {
             onTarget = true;
         } else {
             steer = getSteer(error, PCoeff);
-            rightSpeed = speed * steer;
+            rightSpeed = speed * steer * SPEED_FACTOR;
             leftSpeed = -rightSpeed;
         }
 

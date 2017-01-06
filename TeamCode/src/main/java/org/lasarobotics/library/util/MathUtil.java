@@ -88,4 +88,6 @@ public final class MathUtil {
     public static boolean inBounds(double min, double max, double value) {
         return (value < max) && (value > min);
     }
+
+
 }

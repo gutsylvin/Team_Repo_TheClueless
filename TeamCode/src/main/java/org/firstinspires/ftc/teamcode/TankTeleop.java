@@ -262,9 +262,6 @@ public class TankTeleop extends OpMode {
         double scissorLiftArmSpeed = (gamepad2.left_trigger - gamepad2.right_trigger) * (scissorliftArmMaxSpeed);
         robot.scissorLiftArmMotor.setPower(scissorLiftArmSpeed);
 
-        // robot.leftScissorliftServo.setPosition(scissorliftServos ? 0.843 : 0); // 215/255
-        // robot.rightScissorliftServo.setPosition(scissorliftServos ? 0.059 : 0.902); // 15/255
-
         robot.ballCollectionMotor.setPower(sweeper ? sweeperSpeed : 0);
 
         robot.conveyorGate.setPosition(conveyorGate ? 0 : 0.863);

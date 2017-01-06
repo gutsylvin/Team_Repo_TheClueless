@@ -18,6 +18,8 @@ import org.lasarobotics.vision.opmode.extensions.CameraControlExtension;
 import org.lasarobotics.vision.util.ScreenOrientation;
 import org.opencv.core.Size;
 
+import static org.firstinspires.ftc.teamcode.AutonomousNavigation.AutonomousOpMode.LINE_FOLLOW_TARGET;
+
 
 /**
  * Created by hsunx on 10/22/2016.
@@ -199,7 +201,7 @@ public class BeaconPushTestOpMode extends LinearVisionOpMode {
         // Put a hold after each turn
 
 
-        driveCenteredBeacon(0.125, 8000, 0);
+        pushBeacon(0.125, 0);
 
 
         telemetry.addData("Path", "Complete");
@@ -322,6 +324,78 @@ public class BeaconPushTestOpMode extends LinearVisionOpMode {
         }
     }
 
+    public void encoderDriveColor(double speed,
+                             double speed1,
+                             double speed2,
+                             double left, double right,
+                             double timeoutS) throws InterruptedException {
+        int newLeftTarget;
+        int newRightTarget;
+        int encoderStartLeft;
+        int encoderStartRight;
+
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
+
+            encoderStartLeft = robot.leftMotor.getCurrentPosition();
+            encoderStartRight = robot.rightMotor.getCurrentPosition();
+
+            // Determine new target position, and pass to motor controller
+            newLeftTarget = encoderStartLeft + (int) (left);
+            newRightTarget = encoderStartRight + ((int) (right));
+
+            robot.leftMotor.setTargetPosition(newLeftTarget);
+            robot.rightMotor.setTargetPosition(newRightTarget);
+
+            // Turn On RUN_TO_POSITION
+            robot.leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            robot.rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            robot.leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            robot.leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+            // reset the timeout time and start motion.
+            runtime.reset();
+            robot.leftMotor.setPower(Math.abs(speed));
+            robot.rightMotor.setPower(Math.abs(speed));
+
+            // keep looping while we are still active, and there is time left, and both motors are running.
+            while (opModeIsActive() &&
+                    (runtime.seconds() < timeoutS) &&
+                    (robot.leftMotor.isBusy() && robot.rightMotor.isBusy())) {
+
+                boolean pastStart = (Math.abs(robot.leftMotor.getCurrentPosition() - encoderStartLeft) > START_ENCODER
+                        || Math.abs(robot.rightMotor.getCurrentPosition() - encoderStartRight) > START_ENCODER);
+
+                boolean pastEnd = (Math.abs(newLeftTarget - robot.leftMotor.getCurrentPosition()) < END_ENCODER
+                        || Math.abs(newRightTarget - robot.rightMotor.getCurrentPosition()) < END_ENCODER);
+
+                robot.leftMotor.setPower(Math.abs(pastEnd ? speed2 : (pastStart ? speed1 : speed)));
+                robot.rightMotor.setPower(Math.abs(pastEnd ? speed2 : (pastStart ? speed1 : speed)));
+                // Display it for the driver.
+                telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
+                telemetry.addData("Path2", "Running at %7d :%7d",
+                        robot.leftMotor.getCurrentPosition(),
+                        robot.rightMotor.getCurrentPosition());
+                telemetry.addData("Gyro Angle", robot.gyro.getHeading());
+                telemetry.update();
+
+                reviseColor();
+                // Allow time for other processes to run.
+                idle();
+            }
+
+            // Stop all motion;
+            robot.leftMotor.setPower(0);
+            robot.rightMotor.setPower(0);
+
+            // Turn off RUN_TO_POSITION
+            robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+            //  sleep(250);   // optional pause after each move
+        }
+    }
     MatchDetails.TeamColor convertColor (Beacon.BeaconColor color) {
 
         switch (color) {
@@ -349,7 +423,7 @@ public class BeaconPushTestOpMode extends LinearVisionOpMode {
 
         // Just try and determine it. This assumes (gasp!) that the two colors are different,
         // which they almost always will be. I hope.
-        if (analysis.isBeaconFound()) {
+        /*if (analysis.isBeaconFound()) {
             if (analysis.isLeftKnown()) {
                 if (convertColor(analysis.getStateLeft()) == MatchDetails.color) {
                     left = true;
@@ -366,15 +440,13 @@ public class BeaconPushTestOpMode extends LinearVisionOpMode {
                     left = true;
                 }
             }
-        }
-        /*
+        }*/
+
         while (robot.colorSensor.red() == robot.colorSensor.blue()) {
             encoderDrive(0.25, 150, 150, 1000);
             idle();
             // huh. um. well we're screwed, but not really
         }
-        */
-        /*
         if (robot.colorSensor.red() > robot.colorSensor.blue()) {
             if (MatchDetails.color == MatchDetails.TeamColor.RED) {
                 robot.rightPushServo.setPosition(0.5);
@@ -392,7 +464,7 @@ public class BeaconPushTestOpMode extends LinearVisionOpMode {
                 colorDetected = MatchDetails.TeamColor.BLUE;
             }
         }
-        */
+
 
 
         //driveCenteredBeacon (0.5, 4000);
@@ -433,7 +505,8 @@ public class BeaconPushTestOpMode extends LinearVisionOpMode {
     }
 
 
-    void driveCenteredBeacon (double speed, int timeoutMs, double target) {
+
+    void driveCenteredBeacon (double speed, int timeoutMs, double target, double gyroTarget) throws InterruptedException{
         boolean reachedBeacon = false;
 
         runtime.reset();
@@ -500,16 +573,17 @@ public class BeaconPushTestOpMode extends LinearVisionOpMode {
             }
         }
 
-        while (opModeIsActive() /*&& !reachedBeacon && timeoutMs < runtime.milliseconds()*/) {
+        encoderDriveColor(0.125, 0.125, 0.125, 1000, 1000, 10);
+        //while (opModeIsActive() /*&& !reachedBeacon && timeoutMs < runtime.milliseconds()*/) {
 
             // Check if we need to break out of the loop
-            Beacon.BeaconAnalysis analysis = beacon.getAnalysis();
-            if (analysis.isBeaconFullyBlue()) {
+            //Beacon.BeaconAnalysis analysis = beacon.getAnalysis();
+            /*if (analysis.isBeaconFullyBlue()) {
                 log.add("update", "beacon is fully blue");
                 if (MatchDetails.color == MatchDetails.TeamColor.BLUE) {
 
                     reachedBeacon = true;
-                    break;
+                    // break;
                 }
                 else {
                     // fuck
@@ -521,7 +595,7 @@ public class BeaconPushTestOpMode extends LinearVisionOpMode {
                 if (MatchDetails.color == MatchDetails.TeamColor.RED) {
                     // 'ery good
                     reachedBeacon = true;
-                    break;
+                    // break;
                 }
                 else {
                     // fuck again
@@ -529,7 +603,7 @@ public class BeaconPushTestOpMode extends LinearVisionOpMode {
                 }
             }
 
-            reviseColor();
+
 
             // JKJK maybe the light sensors don't even work ayy kek lmao send tom eng's regards
             /*
@@ -548,25 +622,41 @@ public class BeaconPushTestOpMode extends LinearVisionOpMode {
             }
             */
 
-            RobotLog.i("runtime", runtime.milliseconds());
+            /*double error = robot.opticalDistanceSensor.getLightDetected() - LINE_FOLLOW_TARGET;
+            // We still need to move forward.
+            if (robot.opticalDistanceSensor.getLightDetected() > LINE_FOLLOW_TARGET) {
+                // The input from the light sensors overrides the phone camera
+                // Sorry, Phone Camera. You were crappy anyways.
+                double gyroError = getError(gyroTarget) - target;
 
-            // Tyty LASA Robotics.
-            double distanceFromCenter;
-            double centerOfBeacon; // In screen coordinates.
-            centerOfBeacon = (analysis.getTopLeft().x + analysis.getBottomRight().x) / 2;
-            distanceFromCenter = centerOfBeacon - SCREEN_RESOLUTION_X / 2;
+                if (gyroError > 0) {
+                    robot.rightMotor.setPower(speed + error * P_LINE_COEFF);
+                    robot.leftMotor.setPower(speed - error * P_LINE_COEFF);
+                }
+                else {
+                    robot.rightMotor.setPower(speed - error * P_LINE_COEFF);
+                    robot.leftMotor.setPower(speed + error * P_LINE_COEFF);
+                }
+                continue;
+            }
+            else {
+                double gyroError = getError(gyroTarget) - target;
 
-            double gyroError = target - robot.gyro.getHeading();
-            log.add("update", "gyro error = " + gyroError);
-            // Sanity check, having the drive offset be too much is REALLY dangerous.
-            double driveOffset = Range.clip(gyroError * P_DRIVE_COEFF, -0.2, 0.2);
-            log.add("update", "drive offset = " + driveOffset);
+                if (gyroError > 0) {
+                    robot.rightMotor.setPower(speed + error * P_LINE_COEFF);
+                    robot.leftMotor.setPower(speed - error * P_LINE_COEFF);
+                }
+                else {
+                    robot.rightMotor.setPower(speed - error * P_LINE_COEFF);
+                    robot.leftMotor.setPower(speed + error * P_LINE_COEFF);
+                }
+                continue;
+            }
 
-            robot.leftMotor.setPower(speed + driveOffset);
-            robot.rightMotor.setPower(speed - driveOffset);
+            */
         }
-        log.saveAs(Log.FileType.TEXT);
-    }
+        // log.saveAs(Log.FileType.TEXT);
+    //}
 
     public void reviseColor () {
         if (robot.colorSensor.red() > robot.colorSensor.blue()) {
