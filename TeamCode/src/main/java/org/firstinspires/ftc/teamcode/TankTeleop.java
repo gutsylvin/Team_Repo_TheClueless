@@ -258,6 +258,9 @@ public class TankTeleop extends OpMode {
         }
 
         float scissorLift = -gamepad2.left_stick_y;
+        if (scissorLift != 0) {
+            conveyorGate = true;
+        }
 
         robot.scissorliftMotor.setPower(scissorLift);
 
@@ -269,7 +272,7 @@ public class TankTeleop extends OpMode {
 
         robot.ballCollectionMotor.setPower(sweeper ? sweeperSpeed : 0);
 
-        robot.conveyorGate.setPosition(conveyorGate ? 0 : 0.863);
+        robot.conveyorGate.setPosition(conveyorGate ? 0 : 0.625);
 
         robot.armReleasers.setPosition(armReleasers ? 1 : 0);
 
