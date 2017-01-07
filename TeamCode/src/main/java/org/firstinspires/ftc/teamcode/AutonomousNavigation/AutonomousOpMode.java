@@ -47,6 +47,7 @@ public class AutonomousOpMode extends LinearVisionOpMode {
     static final int SCREEN_RESOLUTION_X = 560;
     static final int SCREEN_RESOLUTION_Y = 960;
 
+    static final double LINE_FOLLOW_TIMEOUT = 4000;
     static final double LINE_FOLLOW_TARGET = 0.4;
 
     // P value for the vision-drive control system
@@ -211,72 +212,63 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
         // Put a hold after each turn
 
-
+// for now
         shootBalls();
-        //shoot();
-        //prepareShoot(false);
 
         if (MatchDetails.color == MatchDetails.TeamColor.RED) {
 
-            encoderDrive(0.25, 0.75, 0.25, -400, -400, 5000);
+            encoderDrive(0.5, 0.75, 0.25, -500, -500, 5000, false);
 
             Thread.sleep(125);
-            gyroTurn(TURN_SPEED * 0.9, -132);
+            gyroTurn(TURN_SPEED, -127);
 
-            encoderDrive(0.25, 0.75, 0.25, 3000, 2900, 8000);
+            encoderDrive(0.30, 0.5, 0.20, 1900, 1900, 8000, false);
 
-            gyroDriveUntilLine(0.15, 0.45, 0);
+            gyroDriveUntilLine(0.175, 0.1, 0.45);
 
-            gyroTurn(TURN_SPEED * 0.5, -93);
-            driveCenteredBeacon(0.125, 4000, -90);
-            encoderDrive(0.25, -300, -300, 3000);
-            gyroTurn(TURN_SPEED * 0.75, -178);
-            encoderDrive(0.5, 0.75, 0.5, 2175, 2150, 10000);
-            gyroDriveUntilLine(0.15, 0.45, 0);
-            encoderDrive(0.20, -50, -50, 2000);
-            gyroTurn(TURN_SPEED * 0.5, -93);
-            encoderDrive(0.8, 500, 500, 1000);
-            driveCenteredBeacon(0.125, 4000, -90);
+            gyroTurn(TURN_SPEED * 0.7, -93);
+
+            pushBeacon(0.125, 90);
+            Thread.sleep(350);
+            encoderDrive(0.7, -250, -250, 3000);
+            gyroTurn(TURN_SPEED * 0.75, 180);
+            encoderDrive(0.5, 0.75, 0.25, 1500, 1500, 10000, false);
+            gyroDriveUntilLine(0.125, 0.1, 0.45);
+
+            encoderDrive(0.5, 100, 2000);
+
+            gyroTurn(TURN_SPEED * 0.7, -90);
+
+            pushBeacon(0.125, 90);
 
         } else if (MatchDetails.color == MatchDetails.TeamColor.BLUE) {
 
-            encoderDrive(0.25, 0.75, 0.25, -400, -400, 5000);
+            encoderDrive(0.25, 0.75, 0.25, -500, -500, 5000, false);
 
             Thread.sleep(125);
-            gyroTurn(TURN_SPEED * 0.9, 130);
+            gyroTurn(TURN_SPEED, 122);
 
-            encoderDrive(0.25, 0.50, 0.20, 2500, 2500, 8000);
+            encoderDrive(0.25, 0.75, 0.20, 1900, 1900, 8000, false);
 
-            gyroDriveUntilLine(0.15, 0.45, 0);
+            gyroDriveUntilLine(0.15, 0.1, 0.45);
 
             gyroTurn(TURN_SPEED * 0.5, 91);
             //encoderDrive(0.35, 325, 300, 3000);
-            driveCenteredBeacon(0.125, 4000, 0);
-            encoderDrive(0.7, -450, -450, 3000);
+            pushBeacon(0.125, 90);
+            Thread.sleep(100);
+            encoderDrive(0.7, -350, -350, 3000);
             gyroTurn(TURN_SPEED * 0.75, 168);
-            encoderDrive(0.5, 0.75, 0.5, 2450, 2140, 10000);
-            gyroDriveUntilLine(0.15, 0.45, 0);
+            encoderDrive(0.5, 0.75, 0.25, 1500, 1500, 10000, false);
+            gyroDriveUntilLine(0.125, 0.1, 0.45);
             // For some reason this isn't needed??? Lol ok that's cool too.
-            encoderDrive(0.20, 50, 50, 2000);
-            gyroTurn(TURN_SPEED * 0.5, 95);
-            encoderDrive(0.8, 300, 300, 1000);
-            driveCenteredBeacon(0.125, 4000, 0);
+            encoderDrive(0.5, 175, 2000);
+            gyroTurn(TURN_SPEED * 0.6, 90);
+            pushBeacon(0.125, 90);
         }
 
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
-    }
-
-    void prepareShoot(boolean shooting) throws InterruptedException {
-        robot.shoot(shooting);
-        Thread.sleep(750);
-    }
-
-    void shoot() throws InterruptedException {
-        robot.conveyorMotor.setPower(1);
-        Thread.sleep(2000);
-        robot.conveyorMotor.setPower(0);
     }
 
     // positive turn for clockwise, negative for counterclockwise.
@@ -304,19 +296,110 @@ public class AutonomousOpMode extends LinearVisionOpMode {
 
     public void encoderDrive(double speed,
                              double left, double right,
-                             double timeoutS) throws InterruptedException {
-        encoderDrive(speed, speed, speed, left, right, timeoutS);
+                             double timeoutMs) throws InterruptedException {
+        encoderDrive(speed, speed, speed, left, right, timeoutMs, true);
     }
 
     public void encoderDrive(double speed, double counts, double timeoutMs) throws InterruptedException {
-        encoderDrive(speed, speed, speed, counts, counts, timeoutMs / 1000);
+        encoderDrive(speed, speed, speed, counts, counts, timeoutMs, true);
+    }
+
+    public void encoderDriveColor(double speed,
+                                  double counts,
+                                  double timeoutMs) throws InterruptedException {
+        encoderDriveColor(speed, speed, speed, counts, counts, timeoutMs);
+    }
+
+    public void encoderDriveColor(double speed,
+                             double speed1,
+                             double speed2,
+                             double left, double right,
+                             double timeoutMs) throws InterruptedException{
+        int newLeftTarget;
+        int newRightTarget;
+        int encoderStartLeft;
+        int encoderStartRight;
+        boolean stopped = false;
+
+        speed *= SPEED_FACTOR;
+        speed1 *= SPEED_FACTOR;
+        speed2 *= SPEED_FACTOR;
+
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
+
+            encoderStartLeft = robot.leftMotor.getCurrentPosition();
+            encoderStartRight = robot.rightMotor.getCurrentPosition();
+
+            // Determine new target position, and pass to motor controller
+            newLeftTarget = encoderStartLeft + (int) ((left));
+            newRightTarget = encoderStartRight + (int) ((right));
+
+            robot.leftMotor.setTargetPosition(newLeftTarget);
+            robot.rightMotor.setTargetPosition(newRightTarget);
+
+            // Turn On RUN_TO_POSITION
+            robot.leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            robot.rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            robot.leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            robot.leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+            // reset the timeout time and start motion.
+            runtime.reset();
+            robot.leftMotor.setPower(Math.abs(speed * SPEED_FACTOR));
+            robot.rightMotor.setPower(Math.abs(speed * SPEED_FACTOR));
+
+            // keep looping while we are still active, and there is time left, and both motors are running.
+            while (opModeIsActive() &&
+                    (runtime.milliseconds() < timeoutMs) &&
+                    (robot.leftMotor.isBusy() && robot.rightMotor.isBusy())) {
+
+                boolean pastStart = (Math.abs(robot.leftMotor.getCurrentPosition() - encoderStartLeft) > START_ENCODER
+                        || Math.abs(robot.rightMotor.getCurrentPosition() - encoderStartRight) > START_ENCODER);
+
+                boolean pastEnd = (Math.abs(newLeftTarget - robot.leftMotor.getCurrentPosition()) < END_ENCODER
+                        || Math.abs(newRightTarget - robot.rightMotor.getCurrentPosition()) < END_ENCODER);
+
+                boolean stop = reviseColor();
+                if (stop && !stopped) {
+                    stopRobotMotion();
+                    stopped = true;
+                    idle();
+                    continue;
+                }
+
+                robot.leftMotor.setPower(Math.abs(pastEnd ? speed2 : (pastStart ? speed1 : speed)));
+                robot.rightMotor.setPower(Math.abs(pastEnd ? speed2 : (pastStart ? speed1 : speed)));
+                // Display it for the driver.
+                telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
+                telemetry.addData("Path2", "Running at %7d :%7d",
+                        robot.leftMotor.getCurrentPosition(),
+                        robot.rightMotor.getCurrentPosition());
+                telemetry.addData("Gyro Angle", robot.gyro.getHeading());
+                telemetry.update();
+
+                // Allow time for other processes to run.
+                idle();
+            }
+
+            // Stop all motion;
+            robot.leftMotor.setPower(0);
+            robot.rightMotor.setPower(0);
+
+            // Turn off RUN_TO_POSITION
+            robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+            //  sleep(250);   // optional pause after each move
+        }
     }
 
     public void encoderDrive(double speed,
                              double speed1,
                              double speed2,
                              double left, double right,
-                             double timeoutS) throws InterruptedException {
+                             double timeoutMs, boolean endBreak) throws InterruptedException {
         int newLeftTarget;
         int newRightTarget;
         int encoderStartLeft;
@@ -353,9 +436,13 @@ public class AutonomousOpMode extends LinearVisionOpMode {
 
             // keep looping while we are still active, and there is time left, and both motors are running.
             while (opModeIsActive() &&
-                    (runtime.seconds() < timeoutS) &&
+                    (runtime.seconds() < timeoutMs) &&
                     (robot.leftMotor.isBusy() && robot.rightMotor.isBusy())) {
 
+                //if (endBreak && (robot.leftMotor.getCurrentPosition() > newLeftTarget || robot.rightMotor.getCurrentPosition() > newRightTarget)) {
+                //stopRobotMotion();
+                //    break;
+                //}
                 boolean pastStart = (Math.abs(robot.leftMotor.getCurrentPosition() - encoderStartLeft) > START_ENCODER
                         || Math.abs(robot.rightMotor.getCurrentPosition() - encoderStartRight) > START_ENCODER);
 
@@ -459,16 +546,17 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         */
 
 
-        driveCenteredBeacon(0.5, 4000, 0);
+        // driveCenteredBeacon(0.5, 4000, 0);
 
         robot.leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         robot.rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         telemetry.addData("COLOR DETECTED", colorDetected.toString());
         telemetry.addData("Team Color", MatchDetails.color);
-        Thread.sleep(500);
+        Thread.sleep(200);
 
-        encoderDrive(speed, 1000, 2000);
+
+        encoderDriveColor(speed, 1000, 3000);
 
         /*while (true) {
             telemetry.addData("color", colorDetected.toString());
@@ -500,7 +588,18 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         double voltage = robot.voltageSensor.getVoltage();
         double shootSpeed;
 
-        shootSpeed = -0.15829 * (Math.pow(voltage, 3)) + 5.9856 * (Math.pow(voltage, 2)) + -75.445 * voltage + 317.47;
+        if (voltage >= 13.5) {
+            shootSpeed = 0.465;
+        }
+        else if (voltage <= 12) {
+            shootSpeed = 0.55;
+        }
+        else if (voltage <= 11.5) {
+            shootSpeed = 0.6;
+        }
+        else {
+            shootSpeed = -0.15829 * (Math.pow(voltage, 3)) + 5.9856 * (Math.pow(voltage, 2)) + -75.445 * voltage + 317.47;
+        }
 
         robot.shoot(true, shootSpeed);
 
@@ -607,20 +706,24 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         }
     }
 
-    public void reviseColor () {
+    public boolean reviseColor () {
         if (robot.colorSensor.red() > robot.colorSensor.blue()) {
             if (MatchDetails.color == MatchDetails.TeamColor.RED) {
                 robot.push(false);
             } else {
                 robot.push(true);
             }
+            return true;
         } else if (robot.colorSensor.blue() > robot.colorSensor.red()) {
             if (MatchDetails.color == MatchDetails.TeamColor.RED) {
                 robot.push(true);
             } else {
                 robot.push(false);
             }
+            return true;
         }
+
+        return false;
     }
 
     public void gyroDriveSimple(double speed, double distance, double angle, double timeout) {
@@ -849,20 +952,27 @@ public class AutonomousOpMode extends LinearVisionOpMode {
     /**
      * @param speed     speed
      * @param target    target for the optical distance sensor
-     * @param nxtTarget target for the nxt light sensors
      * @throws InterruptedException
      */
 
     public void gyroDriveUntilLine(double speed
-                            /*double angle*/, double target, double nxtTarget) throws InterruptedException {
+                            /*double angle*/, double target) throws InterruptedException {
 
+        gyroDriveUntilLine(speed, speed, target);
+    }
+
+    public void gyroDriveUntilLine(double leftSpeed, double rightSpeed
+                            /*double angle*/, double target) throws InterruptedException {
+
+        runtime.reset();
         // Ensure that the opmode is still active
         if (opModeIsActive()) {
 
             // start motion.
-            speed = Range.clip(speed, -1.0, 1.0);
-            robot.leftMotor.setPower(speed);
-            robot.rightMotor.setPower(speed);
+            leftSpeed = Range.clip(leftSpeed, -1.0, 1.0);
+            rightSpeed = Range.clip(rightSpeed, -1.0, 1.0);
+            robot.leftMotor.setPower(leftSpeed);
+            robot.rightMotor.setPower(rightSpeed);
 
             robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -872,7 +982,7 @@ public class AutonomousOpMode extends LinearVisionOpMode {
                 telemetry.addData("light", scaledValue);
                 telemetry.addData("gyro", robot.gyro.getHeading());
                 telemetry.update();
-                if (scaledValue >= target) {
+                if (scaledValue >= target /*|| runtime.milliseconds() > LINE_FOLLOW_TIMEOUT*/) {
                     stopRobotMotion();
                     return;
                 }
@@ -914,6 +1024,8 @@ public class AutonomousOpMode extends LinearVisionOpMode {
      */
     public void gyroTurn(double speed, double angle)
             throws InterruptedException {
+
+        speed *= SPEED_FACTOR;
         double startTime = time;
         // keep looping while we are still active, and not on heading.
         while (opModeIsActive() && !onHeading(speed, angle, P_TURN_COEFF)) {
