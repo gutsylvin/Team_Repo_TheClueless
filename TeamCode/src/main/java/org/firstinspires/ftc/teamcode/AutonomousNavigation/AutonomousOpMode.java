@@ -246,9 +246,9 @@ public class AutonomousOpMode extends LinearVisionOpMode {
             encoderDrive(0.25, 0.75, 0.25, -500, -500, 5000, false);
 
             Thread.sleep(125);
-            gyroTurn(TURN_SPEED, 122);
+            gyroTurn(TURN_SPEED * 0.9, 118);
 
-            encoderDrive(0.25, 0.75, 0.20, 1900, 1900, 8000, false);
+            encoderDrive(0.25, 0.5, 0.20, 1900, 1900, 8000, false);
 
             gyroDriveUntilLine(0.15, 0.1, 0.45);
 
@@ -258,7 +258,7 @@ public class AutonomousOpMode extends LinearVisionOpMode {
             Thread.sleep(100);
             encoderDrive(0.7, -350, -350, 3000);
             gyroTurn(TURN_SPEED * 0.75, 168);
-            encoderDrive(0.5, 0.75, 0.25, 1500, 1500, 10000, false);
+            encoderDrive(0.5, 0.65, 0.25, 1500, 1500, 10000, false);
             gyroDriveUntilLine(0.125, 0.1, 0.45);
             // For some reason this isn't needed??? Lol ok that's cool too.
             encoderDrive(0.5, 175, 2000);
