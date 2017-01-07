@@ -43,20 +43,12 @@ public class AutonomousOpMode extends LinearVisionOpMode {
     static final double MOVEMENT_FACTOR = 0.7777777777777;
     static final double SPEED_FACTOR = 0.95;
 
-    // This setup assumes use of ZTE Speed (what a shitty phone, if you can, get a better one)
-    static final int SCREEN_RESOLUTION_X = 560;
-    static final int SCREEN_RESOLUTION_Y = 960;
-
-    static final double LINE_FOLLOW_TIMEOUT = 4000;
     static final double LINE_FOLLOW_TARGET = 0.4;
 
-    // P value for the vision-drive control system
-    static final double VISION_P = 0.01;
 
     static final double CONFIDENCE_THRESHOLD = 0.75; // This is how confident the FTCVision reading needs to be in order
     // for the program to be sure of its results. Lower is less accurate (duh)
     // but higher may lead to inefficiency.
-    static final double LINE_THRESHOLD = 0.6;        // Used for the lines on the Velocity Vortex mat.
 
     // These constants define the desired driving/control characteristics
     // The can/should be tweaked to suite the specific robot drive train.
@@ -70,9 +62,6 @@ public class AutonomousOpMode extends LinearVisionOpMode {
     static final double P_TURN_COEFF = 0.06;     // Larger is more responsive, but also less stable
     static final double P_DRIVE_COEFF = 0.20;     // Larger is more responsive, but also less stable
     static final double P_LINE_COEFF = 0.25;
-
-    boolean left1;
-    boolean left2;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -184,7 +173,6 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         telemetry.addData(">", "Robot Ready.");    //
         telemetry.update();
 
-        robot.gyro.resetDeviceConfigurationForOpMode();
         robot.gyro.setHeadingMode(ModernRoboticsI2cGyro.HeadingMode.HEADING_CARTESIAN);
         robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -202,11 +190,6 @@ public class AutonomousOpMode extends LinearVisionOpMode {
 
 
         //prepareShoot(true);
-
-        robot.armReleasers.setPosition(0);
-
-        robot.leftPushServo.setPosition(0);
-        robot.rightPushServo.setPosition(0.961); // 245/255
 
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
@@ -233,7 +216,7 @@ public class AutonomousOpMode extends LinearVisionOpMode {
             encoderDrive(0.7, -250, -250, 3000);
             gyroTurn(TURN_SPEED * 0.75, 180);
             encoderDrive(0.5, 0.75, 0.25, 1500, 1500, 10000, false);
-            gyroDriveUntilLine(0.125, 0.1, 0.45);
+            gyroDriveUntilLine(0.15, 0.1, 0.45);
 
             encoderDrive(0.5, 100, 2000);
 
@@ -518,35 +501,6 @@ public class AutonomousOpMode extends LinearVisionOpMode {
                 }
             }
         }
-        /*
-        while (robot.colorSensor.red() == robot.colorSensor.blue()) {
-            encoderDrive(0.25, 150, 150, 1000);
-            idle();
-            // huh. um. well we're screwed, but not really
-        }
-        */
-        /*
-        if (robot.colorSensor.red() > robot.colorSensor.blue()) {
-            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
-                robot.rightPushServo.setPosition(0.5);
-                colorDetected = MatchDetails.TeamColor.RED;
-            } else {
-                robot.leftPushServo.setPosition(0.431);
-                colorDetected = MatchDetails.TeamColor.BLUE;
-            }
-        } else if (robot.colorSensor.blue() > robot.colorSensor.red()) {
-            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
-                robot.leftPushServo.setPosition(0.431);
-                colorDetected = MatchDetails.TeamColor.RED;
-            } else {
-                robot.rightPushServo.setPosition(0.5);
-                colorDetected = MatchDetails.TeamColor.BLUE;
-            }
-        }
-        */
-
-
-        // driveCenteredBeacon(0.5, 4000, 0);
 
         robot.leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         robot.rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -558,26 +512,6 @@ public class AutonomousOpMode extends LinearVisionOpMode {
 
         encoderDriveColor(speed, 1000, 3000);
 
-        /*while (true) {
-            telemetry.addData("color", colorDetected.toString());
-            telemetry.update();
-            if (colorDetected == MatchDetails.TeamColor.RED) {
-                int reading = robot.colorSensor.red();
-                if (reading == 16) {
-                    break;
-                }
-                robot.leftMotor.setPower(speed);
-                robot.rightMotor.setPower(speed);
-            } else {
-                int reading = robot.colorSensor.blue();
-                if (reading == 16) {
-                    break;
-                }
-                robot.leftMotor.setPower(speed);
-                robot.rightMotor.setPower(speed);
-            }
-            idle();
-        }*/
         robot.leftMotor.setPower(0);
         robot.rightMotor.setPower(0);
         robot.leftPushServo.setPosition(0);
@@ -726,228 +660,6 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         return false;
     }
 
-    public void gyroDriveSimple(double speed, double distance, double angle, double timeout) {
-        robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        double leftSpeed;
-        double rightSpeed;
-
-        double startTime = time;
-
-        while (opModeIsActive() && time - startTime < timeout) {
-            double error = angle - robot.gyro.getIntegratedZValue();
-            double offset = error * P_DRIVE_COEFF;
-            robot.leftMotor.setPower(speed + offset);
-            robot.rightMotor.setPower(speed - offset);
-            telemetry.addData("angle", robot.gyro.getIntegratedZValue());
-            telemetry.update();
-        }
-    }
-
-
-    /**
-     * Method to drive on a fixed compass bearing (angle), based on encoder counts.
-     * Move will stop if either of these conditions occur:
-     * 1) Move gets to the desired position
-     * 2) Driver stops the opmode running.
-     *
-     * @param speed    Target speed for forward motion.  Should allow for _/- variance for adjusting heading
-     * @param distance Distance (in inches) to move from current position.  Negative distance means move backwards.
-     * @param angle    Absolute Angle (in Degrees) relative to last gyro reset.
-     *                 0 = fwd. +ve is CCW from fwd. -ve is CW from forward. wtf why
-     *                 If a relative angle is required, add/subtract from current heading.
-     */
-
-    public void gyroDrive(double speed,
-                          double distance,
-                          double angle) throws InterruptedException {
-
-        int newLeftTarget;
-        int newRightTarget;
-        int moveCounts;
-        double max;
-        double error;
-        double steer;
-        double leftSpeed;
-        double rightSpeed;
-        double startTime = getRuntime();
-        // Ensure that the opmode is still active
-        if (opModeIsActive()) {
-
-            // Determine new target position, and pass to motor controller
-            moveCounts = (int) (distance /*\*COUNTS_PER_INCH*/);
-            newLeftTarget = robot.leftMotor.getCurrentPosition() + moveCounts;
-            newRightTarget = robot.rightMotor.getCurrentPosition() + moveCounts;
-
-            // Set Target and Turn On RUN_TO_POSITION
-            robot.leftMotor.setTargetPosition(newLeftTarget);
-            robot.rightMotor.setTargetPosition(newRightTarget);
-
-            robot.leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            robot.rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            robot.leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-            robot.rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-
-            /// / start motion.
-            speed = Range.clip(Math.abs(speed), 0.0, 1.0);
-            robot.leftMotor.setPower(speed);
-            robot.rightMotor.setPower(speed);
-
-            // keep looping while we are still active, and BOTH motors are running.
-            while (opModeIsActive() &&
-                    (robot.leftMotor.isBusy() && robot.rightMotor.isBusy())) {
-
-                // adjust relative speed based on heading error.
-                error = getError(angle);
-                steer = getSteer(error, P_DRIVE_COEFF);
-
-                // if driving in reverse, the motor correction also needs to be reversed
-                if (distance < 0)
-                    steer *= -1.0;
-
-                leftSpeed = speed - steer;
-                rightSpeed = speed + steer;
-
-                // Normalize speeds if any one exceeds +/- 1.0;
-                max = Math.max(Math.abs(leftSpeed), Math.abs(rightSpeed));
-                if (max > 1.0) {
-                    leftSpeed /= max;
-                    rightSpeed /= max;
-                }
-
-                robot.leftMotor.setPower(leftSpeed);
-                robot.rightMotor.setPower(rightSpeed);
-
-                // Display drive status for the driver.
-                telemetry.addData("Err/St", "%5.1f/%5.1f", error, steer);
-                telemetry.addData("Target", "%7d:%7d", newLeftTarget, newRightTarget);
-                telemetry.addData("Actual", "%7d:%7d", robot.leftMotor.getCurrentPosition(),
-                        robot.rightMotor.getCurrentPosition());
-                telemetry.addData("Speed", "%5.2f:%5.2f", leftSpeed, rightSpeed);
-                telemetry.update();
-
-                // Allow time for other processes to run.
-                idle();
-            }
-
-            // Stop all motion;
-            robot.leftMotor.setPower(0);
-            robot.rightMotor.setPower(0);
-
-            // Turn off RUN_TO_POSITION
-            robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
-    }
-
-    /**
-     * Method to drive on a fixed compass bearing (angle), based on encoder counts.
-     * Move will stop if either of these conditions occur:
-     * 1) Move gets to the desired position
-     * 2) Driver stops the opmode running.
-     *
-     * @param speed    Target speed for forward motion.  Should allow for _/- variance for adjusting heading
-     * @param speed2   Target speed for long distances.
-     * @param distance Distance (in inches) to move from current position.  Negative distance means move backwards.
-     * @param angle    Absolute Angle (in Degrees) relative to last gyro reset.
-     *                 0 = fwd. +ve is CCW from fwd. -ve is CW from forward. wtf why
-     *                 If a relative angle is required, add/subtract from current heading.
-     */
-
-    public void gyroDriveModified(double speed,
-                                  double speed2,
-                                  double speed3,
-                                  double distance,
-                                  double angle) throws InterruptedException {
-
-        int newLeftTarget;
-        int newRightTarget;
-        int moveCounts;
-        double max;
-        double error;
-        double steer;
-        double leftSpeed;
-        double rightSpeed;
-        int encoderStartLeft;
-        int encoderStartRight;
-        double startTime = getRuntime();
-        // Ensure that the opmode is still active
-        if (opModeIsActive()) {
-
-            // Determine new target position, and pass to motor controller
-            moveCounts = (int) (distance /*\*COUNTS_PER_INCH*/);
-            encoderStartLeft = robot.leftMotor.getCurrentPosition();
-            encoderStartRight = robot.rightMotor.getCurrentPosition();
-            newLeftTarget = robot.leftMotor.getCurrentPosition() + moveCounts;
-            newRightTarget = robot.rightMotor.getCurrentPosition() + moveCounts;
-
-
-            // Set Target and Turn On RUN_TO_POSITION
-            robot.leftMotor.setTargetPosition(newLeftTarget);
-            robot.rightMotor.setTargetPosition(newRightTarget);
-
-            robot.leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            robot.rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            robot.leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            robot.rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-            /// / start motion.
-            speed = Range.clip(Math.abs(speed), 0.0, 1.0);
-            robot.leftMotor.setPower(speed);
-            robot.rightMotor.setPower(speed);
-
-            // keep looping while we are still active, and BOTH motors are running.
-            while (opModeIsActive() &&
-                    (robot.leftMotor.isBusy() && robot.rightMotor.isBusy())) {
-
-                // adjust relative speed based on heading error.
-                error = getError(angle);
-                steer = getSteer(error, P_DRIVE_COEFF);
-
-                // if driving in reverse, the motor correction also needs to be reversed
-                if (distance < 0)
-                    steer *= -1.0;
-
-                boolean pastStart = (Math.abs(robot.leftMotor.getCurrentPosition() - encoderStartLeft) > START_ENCODER
-                        || Math.abs(robot.rightMotor.getCurrentPosition() - encoderStartRight) > START_ENCODER);
-
-                boolean pastEnd = (Math.abs(newLeftTarget - robot.leftMotor.getCurrentPosition()) > END_ENCODER
-                        || Math.abs(newRightTarget - robot.rightMotor.getCurrentPosition()) > END_ENCODER);
-
-                leftSpeed = /*(pastEnd ? speed3 : */(pastStart ? speed2 : speed) - steer;
-                rightSpeed = /*(pastEnd ? speed3 : */(pastStart ? speed2 : speed) + steer;
-
-                // Normalize speeds if any one exceeds +/- 1.0;
-                max = Math.max(Math.abs(leftSpeed), Math.abs(rightSpeed));
-                if (max > 1.0) {
-                    leftSpeed /= max;
-                    rightSpeed /= max;
-                }
-
-                robot.leftMotor.setPower(leftSpeed);
-                robot.rightMotor.setPower(rightSpeed);
-
-                // Display drive status for the driver.
-                telemetry.addData("Err/St", "%5.1f/%5.1f", error, steer);
-                telemetry.addData("Target", "%7d:%7d", newLeftTarget, newRightTarget);
-                telemetry.addData("Actual", "%7d:%7d", robot.leftMotor.getCurrentPosition(),
-                        robot.rightMotor.getCurrentPosition());
-                telemetry.addData("Speed", "%5.2f:%5.2f", leftSpeed, rightSpeed);
-                telemetry.update();
-
-                // Allow time for other processes to run.
-                idle();
-            }
-
-            // Stop all motion;
-            robot.leftMotor.setPower(0);
-            robot.rightMotor.setPower(0);
-
-            // Turn off RUN_TO_POSITION
-            robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
-    }
 
     /**
      * @param speed     speed
@@ -1044,36 +756,6 @@ public class AutonomousOpMode extends LinearVisionOpMode {
             idle();
         }
 
-        robot.leftMotor.setPower(0);
-        robot.rightMotor.setPower(0);
-    }
-
-    /**
-     * Method to obtain & hold a heading for a finite amount of time
-     * Move will stop once the requested time has elapsed
-     *
-     * @param speed    Desired speed of turn.
-     * @param angle    Absolute Angle (in Degrees) relative to last gyro reset.
-     *                 0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
-     *                 If a relative angle is required, add/subtract from current heading.
-     * @param holdTime Length of time (in seconds) to hold the specified heading.
-     * @throws InterruptedException
-     */
-    public void gyroHold(double speed, double angle, double holdTime)
-            throws InterruptedException {
-
-        ElapsedTime holdTimer = new ElapsedTime();
-
-        // keep looping while we have time remaining.
-        holdTimer.reset();
-        while (opModeIsActive() && (holdTimer.time() < holdTime)) {
-            // Update telemetry & Allow time for other processes to run.
-            onHeading(speed, angle, P_TURN_COEFF);
-            telemetry.update();
-            idle();
-        }
-
-        // Stop all motion;
         robot.leftMotor.setPower(0);
         robot.rightMotor.setPower(0);
     }
