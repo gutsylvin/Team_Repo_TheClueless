@@ -69,7 +69,7 @@ public class TankTeleop extends OpMode {
     // Assuming HS-485HB servo
     final float ENDPOINT = 230 / 255;
     final float PUSH = ENDPOINT / 2;
-
+    double shootSpeed;
     final float SCISSORLIFT_SERVO_DOWN = 200 / 255;
 
     private boolean leftBeacon = false;
@@ -136,6 +136,7 @@ public class TankTeleop extends OpMode {
     public void start() {
         robot.leftPushServo.setPosition(0);
         robot.rightPushServo.setPosition(0.961); // 245/255
+        recalculateSpeed();
     }
 
     /*
@@ -252,6 +253,10 @@ public class TankTeleop extends OpMode {
             }
         }
 
+        if (!shooting && !conveyor && !sweeper && (robot.leftMotor.getPower() == 0) && (robot.rightMotor.getPower() == 0)) {
+            recalculateSpeed();
+        }
+
         float scissorLift = -gamepad2.left_stick_y;
 
         robot.scissorliftMotor.setPower(scissorLift);
@@ -274,6 +279,8 @@ public class TankTeleop extends OpMode {
         }
 
         shootBalls(shooting);
+
+        recalculateSpeed();
 
         robot.conveyorMotor.setPower(conveyor ? 1 : 0);
         try {
@@ -301,28 +308,25 @@ public class TankTeleop extends OpMode {
         super.stop();
     }
 
+    void recalculateSpeed() {
+        double voltage = robot.voltageSensor.getVoltage();
+
+        if (voltage >= 13.5) {
+            shootSpeed = 0.465;
+        } else if (voltage <= 12) {
+            shootSpeed = 0.55;
+        } else if (voltage <= 11.5) {
+            shootSpeed = 0.6;
+        } else {
+            shootSpeed = -0.15829 * (Math.pow(voltage, 3)) + 5.9856 * (Math.pow(voltage, 2)) + -75.445 * voltage + 317.47;
+        }
+    }
 
     void shootBalls(boolean shooting) {
         if (shooting) {
-            double voltage = robot.voltageSensor.getVoltage();
-            double shootSpeed;
-
-            if (voltage >= 13.5) {
-                shootSpeed = 0.465;
-            } else if (voltage <= 12) {
-                shootSpeed = 0.55;
-            } else if (voltage <= 11.5) {
-                shootSpeed = 0.6;
-            } else {
-                shootSpeed = -0.15829 * (Math.pow(voltage, 3)) + 5.9856 * (Math.pow(voltage, 2)) + -75.445 * voltage + 317.47;
-            }
-
             robot.shoot(true, shootSpeed);
-
-            robot.conveyorMotor.setPower(1);
         }
         else {
-            robot.conveyorMotor.setPower(0);
             robot.shoot(false);
         }
 
