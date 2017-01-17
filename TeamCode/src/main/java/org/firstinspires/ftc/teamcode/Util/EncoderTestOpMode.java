@@ -66,11 +66,17 @@ public class EncoderTestOpMode extends OpMode {
     public void init() {
         telemetry.addData("Status", "Initialized");
 
+        motors = new ArrayList<>();
         robot.gyro.resetZAxisIntegrator();
         robot.leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        for (DcMotor motor : hardwareMap.dcMotor) {
+            motors.add(motor);
+        }
+
     }
 
     /*
@@ -100,5 +106,9 @@ public class EncoderTestOpMode extends OpMode {
         telemetry.addData("left", robot.leftMotor.getCurrentPosition());
         telemetry.addData("right", robot.rightMotor.getCurrentPosition());
         telemetry.addData("gyro", robot.gyro.getHeading());
+
+        for (DcMotor motor : motors) {
+            telemetry.addData("Motor: ", motor.getCurrentPosition());
+        }
     }
 }

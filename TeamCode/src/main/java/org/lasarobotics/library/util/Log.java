@@ -43,7 +43,8 @@ public class Log {
      */
     public void add(String tag, String data) {
         logEntries.add(new LogData(timers.getClockValue("log"), tag, data));
-        RobotLog.i(tag, data);
+        RobotLog.i(data);
+        RobotLog.i(tag);
     }
 
     /**

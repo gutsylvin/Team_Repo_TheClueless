@@ -94,7 +94,7 @@ public class TankTeleop extends OpMode {
 
     private double timeSinceLastTap;
 
-    private double sweeperSpeed = 1;
+    private double sweeperSpeed = 0.75;
 
     private boolean firstLoop = true;
 

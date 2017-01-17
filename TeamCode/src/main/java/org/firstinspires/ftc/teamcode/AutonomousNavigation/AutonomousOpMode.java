@@ -4,6 +4,7 @@ import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
@@ -26,7 +27,7 @@ import org.opencv.core.Size;
 @Autonomous(name = "Autonomous: Autonomous", group = "Autonomous")
 public class AutonomousOpMode extends LinearVisionOpMode {
     /* Declare OpMode members. */
-    Robot robot = new Robot();   // Use a Pushbot's hardware
+    Robot robot;
     ModernRoboticsI2cGyro gyro = null;                    // Additional Gyro device
 
     private ElapsedTime runtime = new ElapsedTime();
@@ -63,6 +64,11 @@ public class AutonomousOpMode extends LinearVisionOpMode {
     static final double P_DRIVE_COEFF = 0.20;     // Larger is more responsive, but also less stable
     static final double P_LINE_COEFF = 0.25;
 
+    public void conveyorTemp (long ms) throws InterruptedException{
+        robot.conveyorMotor.setPower(1);
+        Thread.sleep(ms);
+        robot.conveyorMotor.setPower(0);
+    }
     @Override
     public void runOpMode() throws InterruptedException {
         //region ftcvision
@@ -146,7 +152,13 @@ public class AutonomousOpMode extends LinearVisionOpMode {
          * Initialize the standard drive system variables.
          * The init() method of the hardware class does most of the work here
          */
-        robot.init(hardwareMap, telemetry);
+        if (Robot.robot == null) {
+            robot = new Robot();
+            robot.init(hardwareMap, telemetry);
+        }
+        else {
+            robot = Robot.robot;
+        }
         gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
 
 
@@ -161,14 +173,6 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         robot.leftPushServo.setPosition(0);
         robot.rightPushServo.setPosition(0.961); // 245/255
 
-        while (gyro.getHeading() != 0) {
-            gyro.calibrate();
-
-            while (gyro.isCalibrating()) {
-                Thread.sleep(50);
-                idle();
-            }
-        }
 
         telemetry.addData(">", "Robot Ready.");    //
         telemetry.update();
@@ -200,14 +204,9 @@ public class AutonomousOpMode extends LinearVisionOpMode {
 
         if (MatchDetails.color == MatchDetails.TeamColor.RED) {
 
-            encoderDrive(0.5, 0.75, 0.25, -500, -500, 5000, false);
-
-            Thread.sleep(125);
-            gyroTurn(TURN_SPEED, -127);
-
             encoderDrive(0.30, 0.5, 0.20, 1900, 1900, 8000, false);
 
-            gyroDriveUntilLine(0.175, 0.1, 0.45);
+            gyroDriveUntilLine(0.1, 0.1, 0.45);
 
             gyroTurn(TURN_SPEED * 0.7, -93);
 
@@ -216,7 +215,7 @@ public class AutonomousOpMode extends LinearVisionOpMode {
             encoderDrive(0.7, -250, -250, 3000);
             gyroTurn(TURN_SPEED * 0.75, 180);
             encoderDrive(0.5, 0.75, 0.25, 1500, 1500, 10000, false);
-            gyroDriveUntilLine(0.15, 0.1, 0.45);
+            gyroDriveUntilLine(0.125, 0.1, 0.45);
 
             encoderDrive(0.5, 100, 2000);
 
@@ -226,14 +225,10 @@ public class AutonomousOpMode extends LinearVisionOpMode {
 
         } else if (MatchDetails.color == MatchDetails.TeamColor.BLUE) {
 
-            encoderDrive(0.25, 0.75, 0.25, -500, -500, 5000, false);
-
-            Thread.sleep(125);
-            gyroTurn(TURN_SPEED * 0.9, 118);
 
             encoderDrive(0.25, 0.5, 0.20, 1900, 1900, 8000, false);
 
-            gyroDriveUntilLine(0.15, 0.1, 0.45);
+            gyroDriveUntilLine(0.1, 0.1, 0.45);
 
             gyroTurn(TURN_SPEED * 0.5, 91);
             //encoderDrive(0.35, 325, 300, 3000);
@@ -392,6 +387,8 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         speed1 *= SPEED_FACTOR;
         speed2 *= SPEED_FACTOR;
 
+        robot.leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
         // Ensure that the opmode is still active
         if (opModeIsActive()) {
 
@@ -414,8 +411,8 @@ public class AutonomousOpMode extends LinearVisionOpMode {
 
             // reset the timeout time and start motion.
             runtime.reset();
-            robot.leftMotor.setPower(Math.abs(speed * SPEED_FACTOR));
-            robot.rightMotor.setPower(Math.abs(speed * SPEED_FACTOR));
+            robot.leftMotor.setPower(speed * SPEED_FACTOR);
+            robot.rightMotor.setPower(speed * SPEED_FACTOR);
 
             // keep looping while we are still active, and there is time left, and both motors are running.
             while (opModeIsActive() &&
@@ -681,8 +678,8 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         if (opModeIsActive()) {
 
             // start motion.
-            leftSpeed = Range.clip(leftSpeed, -1.0, 1.0);
-            rightSpeed = Range.clip(rightSpeed, -1.0, 1.0);
+            leftSpeed = Range.clip(leftSpeed, -1.0, 1.0) * SPEED_FACTOR;
+            rightSpeed = Range.clip(rightSpeed, -1.0, 1.0) * SPEED_FACTOR;
             robot.leftMotor.setPower(leftSpeed);
             robot.rightMotor.setPower(rightSpeed);
 
