@@ -12,41 +12,47 @@ import static org.firstinspires.ftc.teamcode.Util.ShooterTester.shootSpeed;
 @TeleOp(name="Encoder Test", group="Test")
 public class EncoderTest extends LinearOpMode {
 
+    final int DELAY_SETTLE = 1000;
     /* Declare OpMode members. */
     private ElapsedTime runtime = new ElapsedTime();
-    DcMotor testMotor = null;
+    DcMotor testMotorLeft = null;
     DcMotor testMotorRight = null;
 
     @Override
-    public void runOpMode() {
-        testMotor = Robot.robot.leftShootMotor;
+    public void runOpMode() throws InterruptedException {
+        testMotorLeft = Robot.robot.leftShootMotor;
         testMotorRight = Robot.robot.rightShootMotor;
 
-        testMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        testMotorLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         testMotorRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         while (!isStarted()) {
 
         }
-        testMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        testMotorLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         testMotorRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        runtime.reset();
 
         // run motor for 10 seconds
         Robot.robot.conveyorMotor.setPower(1);
-        testMotor.setPower(shootSpeed);
+        testMotorLeft.setPower(shootSpeed);
         testMotorRight.setPower(shootSpeed);
-        while (opModeIsActive() && (runtime.time() < 10)) {
-            telemetry.addData("Encoder left", "%4.1f:  %d counts", runtime.time(), testMotor.getCurrentPosition());
+        Thread.sleep(DELAY_SETTLE);
+
+        runtime.reset();
+        double previousEncoderValueLeft = testMotorLeft.getCurrentPosition();
+        double previousEncoderValueRight = testMotorRight.getCurrentPosition();
+
+        while (opModeIsActive() && (runtime.time() < 6)) {
+            telemetry.addData("Encoder left", "%4.1f:  %d counts", runtime.time(), testMotorLeft.getCurrentPosition());
             telemetry.addData("Encoder right", "%4.1f:  %d counts", runtime.time(), testMotorRight.getCurrentPosition());
             telemetry.update();
         }
         Robot.robot.conveyorMotor.setPower(0);
-        testMotor.setPower(0.0);
+        testMotorLeft.setPower(0.0);
         testMotorRight.setPower(0.0);
 
-        telemetry.addData("Encoder left", "%5.0f Counts Per Second", (double)(testMotor.getCurrentPosition()) / runtime.time());
-        telemetry.addData("Encoder right", "%5.0f Counts Per Second", (double)(testMotorRight.getCurrentPosition()) / runtime.time());
+        telemetry.addData("Encoder left", "%5.0f Counts Per Second", (double)(testMotorLeft.getCurrentPosition() - previousEncoderValueLeft ) / runtime.time());
+        telemetry.addData("Encoder right", "%5.0f Counts Per Second", (double)(testMotorRight.getCurrentPosition() - previousEncoderValueRight ) / runtime.time());
 
         telemetry.update();
         while (opModeIsActive());

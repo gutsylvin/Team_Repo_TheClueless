@@ -100,6 +100,7 @@ import com.qualcomm.robotcore.wifi.NetworkConnectionFactory;
 import com.qualcomm.robotcore.wifi.NetworkType;
 import com.qualcomm.robotcore.wifi.WifiDirectAssistant;
 
+import org.firstinspires.ftc.robotcontroller.internal.EmotionEngine.EmotionManager;
 import org.firstinspires.ftc.robotcore.internal.AppUtil;
 import org.firstinspires.inspection.RcInspectionActivity;
 
@@ -274,6 +275,8 @@ public class FtcRobotControllerActivity extends Activity {
       }
     });
 
+    EmotionManager.initializeTTS(this);
+
     rickroll = MediaPlayer.create(this, R.raw.rickroll);
     rickroll.setLooping(true);
 
@@ -288,6 +291,8 @@ public class FtcRobotControllerActivity extends Activity {
         }
       }
     });
+
+
 
     immersion = new ImmersiveMode(getWindow().getDecorView());
     dimmer = new Dimmer(this);

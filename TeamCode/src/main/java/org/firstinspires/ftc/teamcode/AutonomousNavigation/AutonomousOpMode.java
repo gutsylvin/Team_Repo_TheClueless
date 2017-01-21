@@ -2,16 +2,15 @@ package org.firstinspires.ftc.teamcode.AutonomousNavigation;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.RobotLog;
 
-import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
 import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
+import org.firstinspires.ftc.teamcode.ShooterCalibration;
+import org.firstinspires.ftc.robotcontroller.internal.EmotionEngine.EmotionManager;
 import org.lasarobotics.vision.android.Cameras;
 import org.lasarobotics.vision.ftc.resq.Beacon;
 import org.lasarobotics.vision.opmode.LinearVisionOpMode;
@@ -32,7 +31,12 @@ public class AutonomousOpMode extends LinearVisionOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
 
+    //region shooting
+    final double timeoutMs = 15.5 * 1000;
+    final long shootTime = 2 * 1000;
+    //endregion
 
+    //region driving
     static final double COUNTS_PER_MOTOR_REV = 1440;    // eg: TETRIX Motor Encoder
     static final double DRIVE_GEAR_REDUCTION = 0.5;     // This is < 1.0 if geared UP
     static final double WHEEL_DIAMETER_INCHES = 4.0;     // For figuring circumference
@@ -61,45 +65,24 @@ public class AutonomousOpMode extends LinearVisionOpMode {
 
     static final double HEADING_THRESHOLD = 2;      // (NOT) As tight as we can make it with an integer gyro
     static final double P_TURN_COEFF = 0.06;     // Larger is more responsive, but also less stable
-    static final double P_DRIVE_COEFF = 0.20;     // Larger is more responsive, but also less stable
     static final double P_LINE_COEFF = 0.25;
+    //endregion
 
-    public void conveyorTemp (long ms) throws InterruptedException{
-        robot.conveyorMotor.setPower(1);
-        Thread.sleep(ms);
-        robot.conveyorMotor.setPower(0);
-    }
+    //region main
     @Override
     public void runOpMode() throws InterruptedException {
         //region ftcvision
         //Wait for vision to initialize - this should be the first thing you do
         waitForVisionStart();
-        /**
-         * Set the camera used for detection
-         * PRIMARY = Front-facing, larger camera
-         * SECONDARY = Screen-facing, "selfie" camera :D
-         **/
+        // EmotionManager.initializeTTS();
         this.setCamera(Cameras.PRIMARY);
 
-        /**
-         * Set the frame size
-         * Larger = sometimes more accurate, but also much slower
-         * After this method runs, it will set the "width" and "height" of the frame
-         **/
         this.setFrameSize(new Size(900, 900));
 
-        /**
-         * Enable extensions. Use what you need.
-         * If you turn on the BEACON extension, it's best to turn on ROTATION too.
-         */
         enableExtension(Extensions.BEACON);         //Beacon detection
         enableExtension(Extensions.ROTATION);       //Automatic screen rotation correction
         enableExtension(Extensions.CAMERA_CONTROL); //Manual camera control
 
-        /**
-         * Set the beacon analysis method
-         * Try them all and see what works!
-         */
         beacon.setAnalysisMethod(Beacon.AnalysisMethod.FAST);
 
         /**
@@ -109,40 +92,10 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         beacon.setColorToleranceRed(0);
         beacon.setColorToleranceBlue(0);
 
-        /**
-         * Set analysis boundary
-         * You should comment this to use the entire screen and uncomment only if
-         * you want faster analysis at the cost of not using the entire frame.
-         * This is also particularly useful if you know approximately where the beacon is
-         * as this will eliminate parts of the frame which may cause problems
-         * This will not work on some methods, such as COMPLEX
-         **/
-        //beacon.setAnalysisBounds(new Rectangle(new Point(width / 2, height / 2), width - 200, 200));
-
-        /**
-         * Set the rotation parameters of the screen
-         * If colors are being flipped or output appears consistently incorrect, try changing these.
-         *
-         * First, tell the extension whether you are using a secondary camera
-         * (or in some devices, a front-facing camera that reverses some colors).
-         *
-         * It's a good idea to disable global auto rotate in Android settings. You can do this
-         * by calling disableAutoRotate() or enableAutoRotate().
-         *
-         * It's also a good idea to force the phone into a specific orientation (or auto rotate) by
-         * calling either setActivityOrientationAutoRotate() or setActivityOrientationFixed(). If
-         * you don't, the camera reader may have problems reading the current orientation.
-         */
         rotation.setIsUsingSecondaryCamera(false);
         rotation.disableAutoRotate();
         rotation.setActivityOrientationFixed(ScreenOrientation.PORTRAIT);
 
-        /**
-         * Set camera control extension preferences
-         *
-         * Enabling manual settings will improve analysis rate and may lead to better results under
-         * tested conditions. If the environment changes, expect to change these values.
-         */
         cameraControl.setColorTemperature(CameraControlExtension.ColorTemperature.AUTO);
         cameraControl.setAutoExposureCompensation();
         //endregion
@@ -152,13 +105,10 @@ public class AutonomousOpMode extends LinearVisionOpMode {
          * Initialize the standard drive system variables.
          * The init() method of the hardware class does most of the work here
          */
-        if (Robot.robot == null) {
-            robot = new Robot();
-            robot.init(hardwareMap, telemetry);
-        }
-        else {
-            robot = Robot.robot;
-        }
+
+        robot = new Robot();
+        robot.init(hardwareMap, telemetry);
+
         gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
 
 
@@ -173,7 +123,6 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         robot.leftPushServo.setPosition(0);
         robot.rightPushServo.setPosition(0.961); // 245/255
 
-
         telemetry.addData(">", "Robot Ready.");    //
         telemetry.update();
 
@@ -182,6 +131,11 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         robot.conveyorGate.setPosition(0.625);
+
+        if (ShooterCalibration.SHOOTING_SPEED == 0) {
+            EmotionManager.speak("YOU SCREWED UP, NO CALIBRATION PERFORMED!");
+        }
+
         // Wait for the game to start (Display Gyro value), and reset gyro before we move..
 
         while (!isStarted()) {
@@ -189,89 +143,86 @@ public class AutonomousOpMode extends LinearVisionOpMode {
             telemetry.addData("Team Color", MatchDetails.color);
             telemetry.addData("right servo position", robot.rightPushServo.getPosition());
             telemetry.update();
+            if (ShooterCalibration.SHOOTING_SPEED == 0) {
+                EmotionManager.speak("YOU SCREWED UP, NO CALIBRATION PERFORMED!");
+                return;
+            }
             idle();
         }
 
-
-        //prepareShoot(true);
-
-        // Step through each leg of the path,
-        // Note: Reverse movement is obtained by setting a negative distance (not speed)
-        // Put a hold after each turn
-
-// for now
-        shootBalls();
-
         if (MatchDetails.color == MatchDetails.TeamColor.RED) {
-
             encoderDrive(0.30, 0.5, 0.20, 1900, 1900, 8000, false);
 
             gyroDriveUntilLine(0.1, 0.1, 0.45);
 
-            gyroTurn(TURN_SPEED * 0.7, -93);
+            gyroTurn(TURN_SPEED * 0.65, -93);
+            robot.shoot(true, ShooterCalibration.SHOOTING_SPEED);
 
             pushBeacon(0.125, 90);
-            Thread.sleep(350);
+            Thread.sleep(500);
+
+            robot.conveyorMotor.setPower(1);
+            Thread.sleep(shootTime);
+            robot.conveyorMotor.setPower(0);
+
+            robot.leftShootMotor.setPower(0);
+            robot.rightShootMotor.setPower(0);
+
             encoderDrive(0.7, -250, -250, 3000);
-            gyroTurn(TURN_SPEED * 0.75, 180);
+            gyroTurn(TURN_SPEED * 0.65, 180);
             encoderDrive(0.5, 0.75, 0.25, 1500, 1500, 10000, false);
             gyroDriveUntilLine(0.125, 0.1, 0.45);
 
             encoderDrive(0.5, 100, 2000);
 
-            gyroTurn(TURN_SPEED * 0.7, -90);
+            gyroTurn(TURN_SPEED * 0.65, -90);
 
             pushBeacon(0.125, 90);
 
-        } else if (MatchDetails.color == MatchDetails.TeamColor.BLUE) {
+            encoderDrive(0.8, -250, -250, 3000);
+            gyroTurn(TURN_SPEED, -128);
+            encoderDrive(1, -1640, -1640, 6000);
 
+        } else if (MatchDetails.color == MatchDetails.TeamColor.BLUE) {
 
             encoderDrive(0.25, 0.5, 0.20, 1900, 1900, 8000, false);
 
             gyroDriveUntilLine(0.1, 0.1, 0.45);
 
-            gyroTurn(TURN_SPEED * 0.5, 91);
-            //encoderDrive(0.35, 325, 300, 3000);
+            gyroTurn(TURN_SPEED * 0.65, 93);
+            encoderDrive(0.5, 75, 1500);
+
+            robot.shoot(true, ShooterCalibration.SHOOTING_SPEED);
             pushBeacon(0.125, 90);
-            Thread.sleep(100);
-            encoderDrive(0.7, -350, -350, 3000);
-            gyroTurn(TURN_SPEED * 0.75, 168);
-            encoderDrive(0.5, 0.65, 0.25, 1500, 1500, 10000, false);
-            gyroDriveUntilLine(0.125, 0.1, 0.45);
-            // For some reason this isn't needed??? Lol ok that's cool too.
-            encoderDrive(0.5, 175, 2000);
-            gyroTurn(TURN_SPEED * 0.6, 90);
+            Thread.sleep(500);
+
+            robot.conveyorMotor.setPower(1);
+            Thread.sleep(shootTime);
+            robot.conveyorMotor.setPower(0);
+
+            robot.shoot(false);
+
+            encoderDrive(0.7, -250, -250, 3000);
+            gyroTurn(TURN_SPEED * 0.65, 168);
+            encoderDrive(0.5, 0.75, 0.25, 1700, 1500, 10000, false);
+            gyroDriveUntilLine(0.145, 0.1, 0.45);
+
+            encoderDrive(0.5, 100, 2000);
+            gyroTurn(TURN_SPEED * 0.65, 90);
             pushBeacon(0.125, 90);
+
+            encoderDrive(0.8, -250, -250, 3000);
+            gyroTurn(TURN_SPEED, 125);
+            encoderDrive(1, -1700, -1700, 6000);
         }
 
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
     }
+    //endregion
 
-    // positive turn for clockwise, negative for counterclockwise.
-    public void localTurn(double speed, double angle) throws InterruptedException {
-        int newLeftTarget;
-        int newRightTarget;
-
-        boolean clockwise = (angle - robot.gyro.getHeading() < 0);
-
-        robot.leftMotor.setPower(clockwise ? speed : -speed);
-        robot.rightMotor.setPower(clockwise ? -speed : speed);
-
-        while (opModeIsActive() && robot.gyro.getHeading() < angle) {
-            telemetry.addData("Gyro", gyro.getHeading());
-            telemetry.update();
-            idle();
-        }
-
-        robot.leftMotor.setPower(0);
-        robot.rightMotor.setPower(0);
-
-        robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    }
-
+    //region drivingfunctions
     public void encoderDrive(double speed,
                              double left, double right,
                              double timeoutMs) throws InterruptedException {
@@ -419,10 +370,6 @@ public class AutonomousOpMode extends LinearVisionOpMode {
                     (runtime.seconds() < timeoutMs) &&
                     (robot.leftMotor.isBusy() && robot.rightMotor.isBusy())) {
 
-                //if (endBreak && (robot.leftMotor.getCurrentPosition() > newLeftTarget || robot.rightMotor.getCurrentPosition() > newRightTarget)) {
-                //stopRobotMotion();
-                //    break;
-                //}
                 boolean pastStart = (Math.abs(robot.leftMotor.getCurrentPosition() - encoderStartLeft) > START_ENCODER
                         || Math.abs(robot.rightMotor.getCurrentPosition() - encoderStartRight) > START_ENCODER);
 
@@ -454,60 +401,109 @@ public class AutonomousOpMode extends LinearVisionOpMode {
             //  sleep(250);   // optional pause after each move
         }
     }
+    /**
+     * @param speed     speed
+     * @param target    target for the optical distance sensor
+     * @throws InterruptedException
+     */
 
-    MatchDetails.TeamColor convertColor(Beacon.BeaconColor color) {
+    public void gyroDriveUntilLine(double speed
+                            /*double angle*/, double target) throws InterruptedException {
 
-        switch (color) {
-            case BLUE:
-                return MatchDetails.TeamColor.BLUE;
-            case BLUE_BRIGHT:
-                return MatchDetails.TeamColor.BLUE;
-            case RED:
-                return MatchDetails.TeamColor.RED;
-            case RED_BRIGHT:
-                return MatchDetails.TeamColor.RED;
-        }
-
-        return MatchDetails.TeamColor.UNKNOWN;
+        gyroDriveUntilLine(speed, speed, target);
     }
 
-    void pushBeacon(double speed, double angle) throws InterruptedException {
+    public void gyroDriveUntilLine(double leftSpeed, double rightSpeed
+                            /*double angle*/, double target) throws InterruptedException {
 
-        MatchDetails.TeamColor colorDetected = MatchDetails.TeamColor.RED; // This will be properly assigned later so that's cool
-        boolean left = false;
+        runtime.reset();
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
 
-        Thread.sleep(250);
+            // start motion.
+            leftSpeed = Range.clip(leftSpeed, -1.0, 1.0) * SPEED_FACTOR;
+            rightSpeed = Range.clip(rightSpeed, -1.0, 1.0) * SPEED_FACTOR;
+            robot.leftMotor.setPower(leftSpeed);
+            robot.rightMotor.setPower(rightSpeed);
 
-        Beacon.BeaconAnalysis analysis = beacon.getAnalysis();
-
-        // Just try and determine it. This assumes (gasp!) that the two colors are different,
-        // which they almost always will be. I hope.
-        if (analysis.isBeaconFound()) {
-            if (analysis.isLeftKnown()) {
-                if (convertColor(analysis.getStateLeft()) == MatchDetails.color) {
-                    left = true;
-                } else {
-                    left = false;
+            robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            // keep looping while we are still active, and BOTH motors are running.
+            while (opModeIsActive()) {
+                double scaledValue = robot.opticalDistanceSensor.getLightDetected();
+                telemetry.addData("light", scaledValue);
+                telemetry.addData("gyro", robot.gyro.getHeading());
+                telemetry.update();
+                if (scaledValue >= target) {
+                    stopRobotMotion();
+                    return;
                 }
+                idle();
             }
-            if (analysis.isRightKnown()) {
-                if (convertColor(analysis.getStateRight()) == MatchDetails.color) {
-                    left = false;
-                } else {
-                    left = true;
-                }
-            }
+
+            // Stop all motion;
+            robot.leftMotor.setPower(0);
+            robot.rightMotor.setPower(0);
+
+            // Turn off RUN_TO_POSITION
+            robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
+    }
+
+    public void stopRobotMotion() {
+        robot.leftMotor.setPower(0);
+        robot.rightMotor.setPower(0);
+    }
+
+    /**
+     * Method to spin on central axis to point in a new direction.
+     * Move will stop if either of these conditions occur:
+     * 1) Move gets to the heading (angle)
+     * 2) Driver stops the opmode running.
+     *
+     * @param speed Desired speed of turn.
+     * @param angle Absolute Angle (in Degrees) relative to last gyro reset.
+     *              0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
+     *              If a relative angle is required, add/subtract from current heading.
+     * @throws InterruptedException
+     */
+    public void gyroTurn(double speed, double angle)
+            throws InterruptedException {
+
+        speed *= SPEED_FACTOR;
+        double startTime = time;
+        // keep looping while we are still active, and not on heading.
+        while (opModeIsActive() && !onHeading(speed, angle, P_TURN_COEFF)) {
+            // Update telemetry & Allow time for other processes to run.
+            if (time > TURN_TIMEOUT + startTime) {
+                break;
+            }
+            telemetry.addData("time", time);
+            telemetry.addData("timeout", TURN_TIMEOUT * 1000);
+            telemetry.addData("left encoder", robot.leftMotor.getCurrentPosition());
+            telemetry.addData("right encoder", robot.rightMotor.getCurrentPosition());
+            RobotLog.i("left encoder : " + robot.leftMotor.getCurrentPosition());
+            RobotLog.i("right encoder : " + robot.rightMotor.getCurrentPosition());
+            telemetry.addData("gyro", robot.gyro.getHeading());
+            telemetry.update();
+            idle();
+        }
+
+        robot.leftMotor.setPower(0);
+        robot.rightMotor.setPower(0);
+    }
+    //endregion
+
+    //region beacon
+    void pushBeacon(double speed, double angle) throws InterruptedException {
 
         robot.leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         robot.rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-        telemetry.addData("COLOR DETECTED", colorDetected.toString());
         telemetry.addData("Team Color", MatchDetails.color);
-        Thread.sleep(200);
 
-
-        encoderDriveColor(speed, 1000, 3000);
+        encoderDriveColor(speed, 1000, 2250);
 
         robot.leftMotor.setPower(0);
         robot.rightMotor.setPower(0);
@@ -515,34 +511,7 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         robot.rightPushServo.setPosition(0.961);
     }
 
-    void shootBalls() throws InterruptedException {
-        double voltage = robot.voltageSensor.getVoltage();
-        double shootSpeed;
 
-        if (voltage >= 13.5) {
-            shootSpeed = 0.465;
-        }
-        else if (voltage <= 12) {
-            shootSpeed = 0.55;
-        }
-        else if (voltage <= 11.5) {
-            shootSpeed = 0.6;
-        }
-        else {
-            shootSpeed = -0.15829 * (Math.pow(voltage, 3)) + 5.9856 * (Math.pow(voltage, 2)) + -75.445 * voltage + 317.47;
-        }
-
-        robot.shoot(true, shootSpeed);
-
-        Thread.sleep(750);
-
-        robot.conveyorMotor.setPower(1);
-
-        Thread.sleep(2000);
-        robot.conveyorMotor.setPower(0);
-        robot.shoot(false);
-
-    }
 
     void driveCenteredBeacon(double speed, int timeoutMs, double target) {
         boolean reachedBeacon = false;
@@ -656,107 +625,9 @@ public class AutonomousOpMode extends LinearVisionOpMode {
 
         return false;
     }
+    //endregion
 
-
-    /**
-     * @param speed     speed
-     * @param target    target for the optical distance sensor
-     * @throws InterruptedException
-     */
-
-    public void gyroDriveUntilLine(double speed
-                            /*double angle*/, double target) throws InterruptedException {
-
-        gyroDriveUntilLine(speed, speed, target);
-    }
-
-    public void gyroDriveUntilLine(double leftSpeed, double rightSpeed
-                            /*double angle*/, double target) throws InterruptedException {
-
-        runtime.reset();
-        // Ensure that the opmode is still active
-        if (opModeIsActive()) {
-
-            // start motion.
-            leftSpeed = Range.clip(leftSpeed, -1.0, 1.0) * SPEED_FACTOR;
-            rightSpeed = Range.clip(rightSpeed, -1.0, 1.0) * SPEED_FACTOR;
-            robot.leftMotor.setPower(leftSpeed);
-            robot.rightMotor.setPower(rightSpeed);
-
-            robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            // keep looping while we are still active, and BOTH motors are running.
-            while (opModeIsActive()) {
-                double scaledValue = robot.opticalDistanceSensor.getLightDetected();
-                telemetry.addData("light", scaledValue);
-                telemetry.addData("gyro", robot.gyro.getHeading());
-                telemetry.update();
-                if (scaledValue >= target /*|| runtime.milliseconds() > LINE_FOLLOW_TIMEOUT*/) {
-                    stopRobotMotion();
-                    return;
-                }
-                //if (robot.leftLightSensor.getLightDetected() >= nxtTarget ||
-                //        robot.rightLightSensor.getLightDetected() >= nxtTarget) {
-                //    stopRobotMotion();
-                //    return;
-                //}
-                // Allow time for other processes to run.
-                idle();
-            }
-
-            // Stop all motion;
-            robot.leftMotor.setPower(0);
-            robot.rightMotor.setPower(0);
-
-            // Turn off RUN_TO_POSITION
-            robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
-    }
-
-    public void stopRobotMotion() {
-        robot.leftMotor.setPower(0);
-        robot.rightMotor.setPower(0);
-    }
-
-    /**
-     * Method to spin on central axis to point in a new direction.
-     * Move will stop if either of these conditions occur:
-     * 1) Move gets to the heading (angle)
-     * 2) Driver stops the opmode running.
-     *
-     * @param speed Desired speed of turn.
-     * @param angle Absolute Angle (in Degrees) relative to last gyro reset.
-     *              0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
-     *              If a relative angle is required, add/subtract from current heading.
-     * @throws InterruptedException
-     */
-    public void gyroTurn(double speed, double angle)
-            throws InterruptedException {
-
-        speed *= SPEED_FACTOR;
-        double startTime = time;
-        // keep looping while we are still active, and not on heading.
-        while (opModeIsActive() && !onHeading(speed, angle, P_TURN_COEFF)) {
-            // Update telemetry & Allow time for other processes to run.
-            if (time > TURN_TIMEOUT + startTime) {
-                break;
-            }
-            telemetry.addData("time", time);
-            telemetry.addData("timeout", TURN_TIMEOUT * 1000);
-            telemetry.addData("left encoder", robot.leftMotor.getCurrentPosition());
-            telemetry.addData("right encoder", robot.rightMotor.getCurrentPosition());
-            RobotLog.i("left encoder : " + robot.leftMotor.getCurrentPosition());
-            RobotLog.i("right encoder : " + robot.rightMotor.getCurrentPosition());
-            telemetry.addData("gyro", robot.gyro.getHeading());
-            telemetry.update();
-            idle();
-        }
-
-        robot.leftMotor.setPower(0);
-        robot.rightMotor.setPower(0);
-    }
-
+    //region gyroutils
     /**
      * Perform one cycle of closed loop heading control.
      *
@@ -828,4 +699,5 @@ public class AutonomousOpMode extends LinearVisionOpMode {
     public double getSteer(double error, double PCoeff) {
         return Range.clip(error * PCoeff, -1, 1);
     }
+    //endregion
 }

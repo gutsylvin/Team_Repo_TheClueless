@@ -11,6 +11,5 @@ public class MatchDetails {
         RED,
         UNKNOWN
     }
-    public static String pathToInstructions;
 
 }

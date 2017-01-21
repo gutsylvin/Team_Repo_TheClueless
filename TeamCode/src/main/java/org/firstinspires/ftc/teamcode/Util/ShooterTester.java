@@ -51,10 +51,10 @@ public class ShooterTester extends OpMode {
         double totalTime = 0;
 
         if (gamepad1.right_bumper && !previousGamepad1.right_bumper) {
-            shootSpeed += 0.02;
+            shootSpeed += 0.01;
         }
         if (gamepad1.left_bumper && !previousGamepad1.left_bumper) {
-            shootSpeed -= 0.02;
+            shootSpeed -= 0.01;
         }
 
         if (gamepad1.a && !previousGamepad1.a) {

@@ -319,10 +319,14 @@ public class TankTeleop extends OpMode {
         } else if (voltage <= 12) {
             shootSpeed = 0.55;
         } else if (voltage <= 11.5) {
-            shootSpeed = 0.6;
+            shootSpeed = 0.8;
         } else {
             shootSpeed = -0.15829 * (Math.pow(voltage, 3)) + 5.9856 * (Math.pow(voltage, 2)) + -75.445 * voltage + 317.47;
         }
+    }
+
+    void override() {
+
     }
 
     void shootBalls(boolean shooting) {

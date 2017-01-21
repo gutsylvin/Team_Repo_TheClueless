@@ -928,11 +928,7 @@ public class BeaconPushTestOpMode extends LinearVisionOpMode {
                     stopRobotMotion();
                     return;
                 }
-                if (robot.leftLightSensor.getLightDetected() >= nxtTarget ||
-                        robot.rightLightSensor.getLightDetected() >= nxtTarget) {
-                    stopRobotMotion();
-                    return;
-                }
+
                 // Allow time for other processes to run.
                 idle();
             }

@@ -63,9 +63,6 @@ public class Robot {
 
     public ModernRoboticsI2cColorSensor colorSensor;
 
-    public LightSensor leftLightSensor;
-    public LightSensor rightLightSensor;
-
     public VoltageSensor voltageSensor;
     // endregion
 
@@ -136,15 +133,18 @@ public class Robot {
         leftMotor = hardwareMap.dcMotor.get("left_drive");
         rightMotor = hardwareMap.dcMotor.get("right_drive");
 
-        leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-
         leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         leftShootMotor = hardwareMap.dcMotor.get("left_shoot");
         rightShootMotor = hardwareMap.dcMotor.get("right_shoot");
 
         leftShootMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        leftShootMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightShootMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         conveyorMotor = hardwareMap.dcMotor.get("conveyor");
 
@@ -170,9 +170,6 @@ public class Robot {
         opticalDistanceSensor = (hardwareMap.opticalDistanceSensor.get("ods"));
 
         colorSensor = ((ModernRoboticsI2cColorSensor) hardwareMap.colorSensor.get("color_sensor"));
-
-        leftLightSensor = hardwareMap.lightSensor.get("left_light_sensor");
-        rightLightSensor = hardwareMap.lightSensor.get("right_light_sensor");
 
         voltageSensor = hardwareMap.voltageSensor.get("Shoot Motors");
 
