@@ -61,7 +61,7 @@ public class AutonomousOpMode extends LinearVisionOpMode {
     static final double TURN_TIMEOUT = 10;
 
     static final double START_ENCODER = 200;    // Driving subroutines will use this encoder value as the "revving up" period
-    static final double END_ENCODER = 500;
+    static final double END_ENCODER = 900;
 
     static final double HEADING_THRESHOLD = 2;      // (NOT) As tight as we can make it with an integer gyro
     static final double P_TURN_COEFF = 0.06;     // Larger is more responsive, but also less stable
@@ -71,6 +71,7 @@ public class AutonomousOpMode extends LinearVisionOpMode {
     //region main
     @Override
     public void runOpMode() throws InterruptedException {
+
         //region ftcvision
         //Wait for vision to initialize - this should be the first thing you do
         waitForVisionStart();
@@ -151,71 +152,73 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         }
 
         if (MatchDetails.color == MatchDetails.TeamColor.RED) {
-            encoderDrive(0.30, 0.5, 0.20, 1900, 1900, 8000, false);
 
-            gyroDriveUntilLine(0.1, 0.1, 0.45);
+            encoderDrive(0.3, 0.70, 0.3, 3500, 3500, 8000, false);
+            gyroDriveUntilLine(0.1, 0.1, 0.45);  // go to white line
+            encoderDrive(0.5, 80, 2000);  // move forward
+            gyroTurn(TURN_SPEED * 0.65, 87);
+            //encoderDrive(0.5, 50, 1500);  // move forward before pushing beacon
+            //Thread.sleep(50);
+            pushBeacon(0.125, 90);
 
-            gyroTurn(TURN_SPEED * 0.65, -93);
+            encoderDrive(0.7, -200, -200, 3000); // move backward
+            gyroTurn(TURN_SPEED * 0.65, 6);
+
+            encoderDrive(0.3, 0.70, 0.3, -1420, -1420, 10000, false);
+            gyroDriveUntilLine(-0.1, -0.1, 0.45); // go to white line
+            encoderDrive(0.5, 150, 2000);// move forward
+            gyroTurn(TURN_SPEED * 0.65, 87);
+            //robot.shoot(true, 0.4);
+            encoderDrive(0.5, 50, 1500);  // move forward before pushing beacon
+
             robot.shoot(true, ShooterCalibration.SHOOTING_SPEED);
 
+            //Thread.sleep(50);
             pushBeacon(0.125, 90);
-            Thread.sleep(500);
 
+            Thread.sleep(300);
             robot.conveyorMotor.setPower(1);
             Thread.sleep(shootTime);
             robot.conveyorMotor.setPower(0);
+            robot.shoot(false);
 
-            robot.leftShootMotor.setPower(0);
-            robot.rightShootMotor.setPower(0);
-
-            encoderDrive(0.7, -250, -250, 3000);
-            gyroTurn(TURN_SPEED * 0.65, 180);
-            encoderDrive(0.5, 0.75, 0.25, 1500, 1500, 10000, false);
-            gyroDriveUntilLine(0.125, 0.1, 0.45);
-
-            encoderDrive(0.5, 100, 2000);
-
-            gyroTurn(TURN_SPEED * 0.65, -90);
-
-            pushBeacon(0.125, 90);
-
-            encoderDrive(0.8, -250, -250, 3000);
-            gyroTurn(TURN_SPEED, -128);
-            encoderDrive(1, -1640, -1640, 6000);
+            encoderDrive(0.6, -150, 1500);  // move backward
+            gyroTurn(0.35, 104);
+            encoderDrive(0.65, -1600, -1600, 3000);
 
         } else if (MatchDetails.color == MatchDetails.TeamColor.BLUE) {
 
-            encoderDrive(0.25, 0.5, 0.20, 1900, 1900, 8000, false);
-
-            gyroDriveUntilLine(0.1, 0.1, 0.45);
-
-            gyroTurn(TURN_SPEED * 0.65, 93);
-            encoderDrive(0.5, 75, 1500);
-
-            robot.shoot(true, ShooterCalibration.SHOOTING_SPEED);
+            encoderDrive(0.3, 0.70, 0.3, 3500, 3500, 8000, false);
+            gyroDriveUntilLine(0.1, 0.1, 0.45);  // go to white line
+            encoderDrive(0.5, 80, 2000);  // move forward
+            gyroTurn(TURN_SPEED * 0.65, -87);
+            //encoderDrive(0.5, 50, 1500);  // move forward before pushing beacon
+            //Thread.sleep(50);
             pushBeacon(0.125, 90);
-            Thread.sleep(500);
 
+            encoderDrive(0.7, -200, -200, 3000); // move backward
+            gyroTurn(TURN_SPEED * 0.65, -5);
+
+            encoderDrive(0.3, 0.70, 0.3, -1420, -1420, 10000, false);
+            gyroDriveUntilLine(-0.1, -0.1, 0.45); // go to white line
+            encoderDrive(0.5, 150, 2000);// move forward
+            gyroTurn(TURN_SPEED * 0.65, -87);
+            //robot.shoot(true, 0.4);
+            encoderDrive(0.5, 50, 1500);  // move forward before pushing beacon
+            robot.shoot(true, ShooterCalibration.SHOOTING_SPEED);
+            //Thread.sleep(50);
+            pushBeacon(0.125, 90);
+
+            Thread.sleep(300);
             robot.conveyorMotor.setPower(1);
             Thread.sleep(shootTime);
             robot.conveyorMotor.setPower(0);
-
             robot.shoot(false);
 
-            encoderDrive(0.7, -250, -250, 3000);
-            gyroTurn(TURN_SPEED * 0.65, 168);
-            encoderDrive(0.5, 0.75, 0.25, 1700, 1500, 10000, false);
-            gyroDriveUntilLine(0.145, 0.1, 0.45);
-
-            encoderDrive(0.5, 100, 2000);
-            gyroTurn(TURN_SPEED * 0.65, 90);
-            pushBeacon(0.125, 90);
-
-            encoderDrive(0.8, -250, -250, 3000);
-            gyroTurn(TURN_SPEED, 125);
-            encoderDrive(1, -1700, -1700, 6000);
+            encoderDrive(0.6, -150, 1500);  // move backward
+            gyroTurn(0.35, -103);
+            encoderDrive(0.65, -1700, -1700, 3000);
         }
-
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
@@ -276,8 +279,8 @@ public class AutonomousOpMode extends LinearVisionOpMode {
 
             // reset the timeout time and start motion.
             runtime.reset();
-            robot.leftMotor.setPower(Math.abs(speed * SPEED_FACTOR));
-            robot.rightMotor.setPower(Math.abs(speed * SPEED_FACTOR));
+            robot.leftMotor.setPower(Math.abs(speed));
+            robot.rightMotor.setPower(Math.abs(speed));
 
             // keep looping while we are still active, and there is time left, and both motors are running.
             while (opModeIsActive() &&
@@ -362,8 +365,8 @@ public class AutonomousOpMode extends LinearVisionOpMode {
 
             // reset the timeout time and start motion.
             runtime.reset();
-            robot.leftMotor.setPower(speed * SPEED_FACTOR);
-            robot.rightMotor.setPower(speed * SPEED_FACTOR);
+            robot.leftMotor.setPower(speed);
+            robot.rightMotor.setPower(speed);
 
             // keep looping while we are still active, and there is time left, and both motors are running.
             while (opModeIsActive() &&
@@ -503,7 +506,7 @@ public class AutonomousOpMode extends LinearVisionOpMode {
 
         telemetry.addData("Team Color", MatchDetails.color);
 
-        encoderDriveColor(speed, 1000, 2250);
+        encoderDriveColor(speed, 700, 2250);
 
         robot.leftMotor.setPower(0);
         robot.rightMotor.setPower(0);

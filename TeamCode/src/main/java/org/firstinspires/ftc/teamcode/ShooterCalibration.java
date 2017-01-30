@@ -29,8 +29,8 @@ public class ShooterCalibration extends LinearOpMode {
 
     final double TOLERANCE = 20;
 
-    final double LOWER_BOUND = 0.10;
-    final double UPPER_BOUND = 0.7;
+    final double LOWER_BOUND = 0.45;
+    final double UPPER_BOUND = 0.98;
 
     double currentLowerBound = LOWER_BOUND;
     double currentUpperBound = UPPER_BOUND;
@@ -47,10 +47,10 @@ public class ShooterCalibration extends LinearOpMode {
         waitForStart();
         robot.conveyorMotor.setPower(1);
         if (MatchDetails.color == MatchDetails.TeamColor.RED) {
-            setEncoderSpeed(2125, robot.leftShootMotor, robot.rightShootMotor);
+            setEncoderSpeed(2450, robot.leftShootMotor, robot.rightShootMotor);
         }
         else if (MatchDetails.color == MatchDetails.TeamColor.BLUE) {
-            setEncoderSpeed(2160, robot.leftShootMotor, robot.rightShootMotor);
+            setEncoderSpeed(2450, robot.leftShootMotor, robot.rightShootMotor);
         }
         robot.conveyorMotor.setPower(0);
         while (opModeIsActive());

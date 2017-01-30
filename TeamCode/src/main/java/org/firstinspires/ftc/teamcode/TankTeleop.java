@@ -32,6 +32,8 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode;
 
+import android.media.MediaPlayer;
+
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.exception.RobotCoreException;
@@ -44,6 +46,7 @@ import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
 import org.firstinspires.ftc.teamcode.Util.MotorToggle;
 import org.firstinspires.ftc.teamcode.Util.ServoToggle;
 import org.firstinspires.ftc.teamcode.Util.Toggle;
+import org.lasarobotics.library.android.Util;
 
 /**
  * This file provides basic Telop driving for a Pushbot robot.
@@ -92,6 +95,8 @@ public class TankTeleop extends OpMode {
     private Gamepad previousGamepad1;
     private Gamepad previousGamepad2;
 
+    MediaPlayer player;
+
     private double timeSinceLastTap;
 
     private double sweeperSpeed = 0.75;
@@ -99,6 +104,8 @@ public class TankTeleop extends OpMode {
     private boolean firstLoop = true;
 
     private double lastTime;
+
+    private boolean isPlaying;
 
     private double scissorliftArmMaxSpeed = 0.5;
 
@@ -118,6 +125,9 @@ public class TankTeleop extends OpMode {
         // Send telemetry message to signify robot waiting;
         telemetry.addData("Say", "Hello Driver");    //
         updateTelemetry(telemetry);
+
+        player = MediaPlayer.create(Util.getContext(), R.raw.rocky);
+
     }
 
     /*
@@ -144,7 +154,6 @@ public class TankTeleop extends OpMode {
      */
     @Override
     public void loop() {
-
         double deltaTime = time - lastTime;
         lastTime = time;
 
@@ -152,7 +161,7 @@ public class TankTeleop extends OpMode {
             firstLoop = false;
             robot.leftPushServo.setPosition(0);
             robot.rightPushServo.setPosition(0.961); // 245/255
-            robot.conveyorGate.setPosition(0.863);
+            robot.conveyorGate.setPosition(0.55);
             try {
                 previousGamepad1.copy(gamepad1);
                 previousGamepad2.copy(gamepad2);
@@ -222,6 +231,14 @@ public class TankTeleop extends OpMode {
         // Sweeper toggle
         if (gamepad2.a) {
             if (!previousGamepad2.a) {
+                sweeperSpeed = Math.abs(sweeperSpeed);
+                sweeper = !sweeper;
+            }
+        }
+
+        if (gamepad2.dpad_down) {
+            if (!previousGamepad2.dpad_down) {
+                sweeperSpeed = Math.abs(sweeperSpeed) * -1;
                 sweeper = !sweeper;
             }
         }
@@ -230,6 +247,8 @@ public class TankTeleop extends OpMode {
         if (gamepad2.left_bumper) {
             if (!previousGamepad2.left_bumper) {
                 shooting = !shooting;
+                conveyor = false;
+                conveyorGate = false;
             }
         }
 
@@ -248,7 +267,7 @@ public class TankTeleop extends OpMode {
         if (gamepad2.y) {
             if (!previousGamepad2.y) {
                 shooting = false;
-                conveyor = false;
+                conveyor = true;
                 conveyorGate = true;
             }
         }
@@ -260,6 +279,18 @@ public class TankTeleop extends OpMode {
         float scissorLift = -gamepad2.left_stick_y;
         if (scissorLift != 0) {
             conveyorGate = true;
+
+            if (!isPlaying) {
+                isPlaying = true;
+                //player.start();
+            }
+        }
+
+        if (gamepad2.dpad_left) {
+            if (isPlaying) {
+                isPlaying = false;
+                player.stop();
+            }
         }
 
         robot.scissorliftMotor.setPower(scissorLift);
@@ -272,7 +303,7 @@ public class TankTeleop extends OpMode {
 
         robot.ballCollectionMotor.setPower(sweeper ? sweeperSpeed : 0);
 
-        robot.conveyorGate.setPosition(conveyorGate ? 0 : 0.625);
+        robot.conveyorGate.setPosition(conveyorGate ? 0 : 0.55);
 
         robot.armReleasers.setPosition(armReleasers ? 1 : 0);
 
@@ -314,12 +345,22 @@ public class TankTeleop extends OpMode {
     void recalculateSpeed() {
         double voltage = robot.voltageSensor.getVoltage();
 
-        if (voltage >= 13.5) {
-            shootSpeed = 0.465;
-        } else if (voltage <= 12) {
-            shootSpeed = 0.55;
-        } else if (voltage <= 11.5) {
-            shootSpeed = 0.8;
+        if (voltage >= 13.3) {
+            shootSpeed = 0.41;
+        } else if (voltage <= 13.2) {
+            shootSpeed = 0.43;
+        } else if (voltage <= 13.1) {
+            shootSpeed = 0.46;
+        } else if (voltage <= 12.9) {
+            shootSpeed = 0.49;
+        } else if (voltage <= 12.7) {
+            shootSpeed = 0.51;
+        } else if (voltage <= 12.5) {
+            shootSpeed = 0.56;
+        } else if (voltage <= 12.3) {
+            shootSpeed = 0.65;
+        } else if (voltage <= 12.0) {
+            shootSpeed = 0.68;
         } else {
             shootSpeed = -0.15829 * (Math.pow(voltage, 3)) + 5.9856 * (Math.pow(voltage, 2)) + -75.445 * voltage + 317.47;
         }
