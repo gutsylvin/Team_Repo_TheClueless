@@ -34,6 +34,7 @@ public class EncoderTest extends LinearOpMode {
 
         // run motor for 10 seconds
         Robot.robot.conveyorMotor.setPower(1);
+        Robot.robot.ballCollectionMotor.setPower(1);
         testMotorLeft.setPower(-shootSpeed);
         testMotorRight.setPower(shootSpeed);
         Thread.sleep(DELAY_SETTLE);
@@ -48,6 +49,7 @@ public class EncoderTest extends LinearOpMode {
             telemetry.update();
         }
         Robot.robot.conveyorMotor.setPower(0);
+        Robot.robot.ballCollectionMotor.setPower(0);
         testMotorLeft.setPower(0.0);
         testMotorRight.setPower(0.0);
 

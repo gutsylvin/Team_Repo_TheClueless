@@ -2,6 +2,9 @@ package org.firstinspires.ftc.teamcode.RobotHardware;
 
 import android.os.DropBoxManager;
 
+import com.qualcomm.hardware.adafruit.AdafruitBNO055IMU;
+import com.qualcomm.hardware.adafruit.AdafruitI2cColorSensor;
+import com.qualcomm.hardware.ams.AMSColorSensorImpl;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsAnalogOpticalDistanceSensor;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cColorSensor;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
@@ -62,6 +65,7 @@ public class Robot {
     public OpticalDistanceSensor opticalDistanceSensor;
 
     public ModernRoboticsI2cColorSensor colorSensor;
+    public AdafruitI2cColorSensor adafruitColorSensor;
 
     public VoltageSensor voltageSensor;
     // endregion
@@ -87,8 +91,6 @@ public class Robot {
     public DcMotor scissorliftMotor;
 
     public ScaledDcMotor scissorLiftArmMotor;
-
-    static final double sissorLiftArmMotorSpeed = 0.5;
 
     //endregion
 
@@ -121,6 +123,17 @@ public class Robot {
         else {
             robot.rightPushServo.setPosition(0.5);
             robot.leftPushServo.setPosition(0);
+        }
+    }
+
+    public void pushBoth (boolean push) {
+        if (push) {
+            robot.leftPushServo.setPosition(0.431);
+            robot.rightPushServo.setPosition(0.5);
+        }
+        else {
+            robot.leftPushServo.setPosition(0);
+            robot.rightPushServo.setPosition(0.961);
         }
     }
 
@@ -170,6 +183,7 @@ public class Robot {
         opticalDistanceSensor = (hardwareMap.opticalDistanceSensor.get("ods"));
 
         colorSensor = ((ModernRoboticsI2cColorSensor) hardwareMap.colorSensor.get("color_sensor"));
+        //adafruitColorSensor = ((AdafruitI2cColorSensor)hardwareMap.colorSensor.get("color_sensor_adafruit"));
 
         voltageSensor = hardwareMap.voltageSensor.get("Shoot Motors");
 

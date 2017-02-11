@@ -45,36 +45,35 @@ import com.qualcomm.robotcore.hardware.LED;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
 @Autonomous(name = "TestColorSensors", group = "Tests")
-@Disabled
 public class TestColorSensors extends LinearOpMode {
 
   public enum ColorSensorDevice {ADAFRUIT, HITECHNIC_NXT, MODERN_ROBOTICS_I2C};
 
-  public ColorSensorDevice device = ColorSensorDevice.MODERN_ROBOTICS_I2C;
+  public ColorSensorDevice device = ColorSensorDevice.ADAFRUIT;
 
   ColorSensor colorSensor;
   DeviceInterfaceModule cdim;
   LED led;
-  TouchSensor t;
+  //TouchSensor t;
 
   @Override
   public void runOpMode() throws InterruptedException {
     hardwareMap.logDevices();
 
-    cdim = hardwareMap.deviceInterfaceModule.get("dim");
+    cdim = hardwareMap.deviceInterfaceModule.get("Device Interface Module");
     switch (device) {
       case HITECHNIC_NXT:
         colorSensor = hardwareMap.colorSensor.get("nxt");
         break;
       case ADAFRUIT:
-        colorSensor = hardwareMap.colorSensor.get("lady");
+        colorSensor = hardwareMap.colorSensor.get("color_sensor_adafruit");
         break;
       case MODERN_ROBOTICS_I2C:
-        colorSensor = hardwareMap.colorSensor.get("mr");
+        colorSensor = hardwareMap.colorSensor.get("color_sensor");
         break;
     }
     led = hardwareMap.led.get("led");
-    t = hardwareMap.touchSensor.get("t");
+    //t = hardwareMap.touchSensor.get("t");
 
     waitForStart();
 
@@ -83,7 +82,7 @@ public class TestColorSensors extends LinearOpMode {
     final View relativeLayout = ((Activity) hardwareMap.appContext).findViewById(R.id.RelativeLayout);
     while (opModeIsActive()) {
 
-      enableLed(t.isPressed());
+      enableLed(gamepad1.x);
 
       switch (device) {
         case HITECHNIC_NXT:
@@ -101,13 +100,12 @@ public class TestColorSensors extends LinearOpMode {
       telemetry.addData("Green", colorSensor.green());
       telemetry.addData("Blue ", colorSensor.blue());
       telemetry.addData("Hue", hsvValues[0]);
-
+        telemetry.update();
       relativeLayout.post(new Runnable() {
         public void run() {
           relativeLayout.setBackgroundColor(Color.HSVToColor(0xff, values));
         }
       });
-      waitOneFullHardwareCycle();
     }
   }
 

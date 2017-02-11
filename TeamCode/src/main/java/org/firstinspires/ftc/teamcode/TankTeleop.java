@@ -63,7 +63,7 @@ import org.lasarobotics.library.android.Util;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name = "Pushbot: Teleop Tank", group = "TeleOp")
+@TeleOp(name = "Teleop Tank", group = "TeleOp")
 public class TankTeleop extends OpMode {
 
     /* Declare OpMode members. */
@@ -258,6 +258,15 @@ public class TankTeleop extends OpMode {
             }
         }
 
+        if (gamepad2.b) {
+            if (!previousGamepad2.b) {
+                shooting = false;
+                conveyor = false;
+                sweeper = false;
+                conveyorGate = true;
+            }
+        }
+
         if (gamepad2.right_bumper) {
             if (!previousGamepad2.right_bumper) {
                 conveyorGate = !conveyorGate;
@@ -269,6 +278,7 @@ public class TankTeleop extends OpMode {
                 shooting = false;
                 conveyor = true;
                 conveyorGate = true;
+                sweeper = true;
             }
         }
 
@@ -346,21 +356,23 @@ public class TankTeleop extends OpMode {
         double voltage = robot.voltageSensor.getVoltage();
 
         if (voltage >= 13.3) {
-            shootSpeed = 0.41;
-        } else if (voltage <= 13.2) {
             shootSpeed = 0.43;
-        } else if (voltage <= 13.1) {
+        } else if (voltage <= 13.2) {
             shootSpeed = 0.46;
+        } else if (voltage <= 13.1) {
+            shootSpeed = 0.52;
         } else if (voltage <= 12.9) {
-            shootSpeed = 0.49;
+            shootSpeed = 0.57;
         } else if (voltage <= 12.7) {
-            shootSpeed = 0.51;
+            shootSpeed = 0.59;
         } else if (voltage <= 12.5) {
-            shootSpeed = 0.56;
+            shootSpeed = 0.64;
         } else if (voltage <= 12.3) {
-            shootSpeed = 0.65;
-        } else if (voltage <= 12.0) {
             shootSpeed = 0.68;
+        } else if (voltage <= 12.1) {
+            shootSpeed = 0.73;
+        } else if (voltage <= 12.0) {
+            shootSpeed = 0.76;
         } else {
             shootSpeed = -0.15829 * (Math.pow(voltage, 3)) + 5.9856 * (Math.pow(voltage, 2)) + -75.445 * voltage + 317.47;
         }

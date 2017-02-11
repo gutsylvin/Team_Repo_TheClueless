@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
+import org.firstinspires.ftc.teamcode.ShooterCalibration;
 
 
 /**
@@ -171,14 +172,16 @@ public class ShootBallsAutonomous extends LinearOpMode {
     }
 
     void prepareShoot(boolean shooting) throws InterruptedException {
-        robot.shoot(shooting);
+        robot.shoot(shooting, ShooterCalibration.SHOOTING_SPEED);
         Thread.sleep(2000);
     }
 
     void shoot() throws InterruptedException {
         robot.conveyorMotor.setPower(1);
+        robot.ballCollectionMotor.setPower(1);
         Thread.sleep(4000);
         robot.conveyorMotor.setPower(0);
+        robot.ballCollectionMotor.setPower(0);
     }
 
     // positive turn for clockwise, negative for counterclockwise.
