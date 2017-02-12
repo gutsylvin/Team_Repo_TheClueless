@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.AutonomousNavigation;
+package org.firstinspires.ftc.teamcode.AutonomousOpModes;
 
 /**
  * Created by hsunx on 2/3/2017.
@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.teamcode.AutonomousNavigation.MatchDetails;
 import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
 import org.firstinspires.ftc.teamcode.ShooterCalibration;
 

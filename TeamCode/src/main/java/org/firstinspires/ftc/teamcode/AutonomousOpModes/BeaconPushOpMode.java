@@ -1,22 +1,20 @@
-package org.firstinspires.ftc.teamcode.AutonomousNavigation;
+package org.firstinspires.ftc.teamcode.AutonomousOpModes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.RobotLog;
-import org.firstinspires.ftc.teamcode.AutonomousNavigation.AutonomousOpMode;
+
+import org.firstinspires.ftc.teamcode.AutonomousNavigation.MatchDetails;
 import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
 import org.lasarobotics.vision.android.Cameras;
 import org.lasarobotics.vision.ftc.resq.Beacon;
 import org.lasarobotics.vision.opmode.LinearVisionOpMode;
-import org.lasarobotics.vision.opmode.VisionOpMode;
 import org.lasarobotics.vision.opmode.extensions.CameraControlExtension;
 import org.lasarobotics.vision.util.ScreenOrientation;
-import org.lasarobotics.vision.util.color.Color;
 import org.opencv.core.Size;
 
 import static org.firstinspires.ftc.teamcode.RobotHardware.Robot.robot;

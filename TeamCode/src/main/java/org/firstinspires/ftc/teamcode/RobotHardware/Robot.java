@@ -1,46 +1,32 @@
 package org.firstinspires.ftc.teamcode.RobotHardware;
 
-import android.os.DropBoxManager;
-
-import com.qualcomm.hardware.adafruit.AdafruitBNO055IMU;
 import com.qualcomm.hardware.adafruit.AdafruitI2cColorSensor;
-import com.qualcomm.hardware.ams.AMSColorSensorImpl;
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsAnalogOpticalDistanceSensor;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cColorSensor;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsUsbDcMotorController;
-import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorController;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.LightSensor;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
-import com.qualcomm.robotcore.hardware.configuration.Utility;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.lasarobotics.library.drive.ScaledDcMotor;
-import org.lasarobotics.library.util.MathUtil;
-import org.lasarobotics.vision.android.Util;
-
-import java.lang.reflect.Field;
-import java.util.AbstractMap;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by hsunx on 10/28/2016.
  */
 
 public class Robot {
+    public boolean notStopped() {
+        return !stopped;
+    }
+
+    LinearOpMode currentOpMode;
+
+    static boolean stopped;
 
     // There should only be one instance of this (singleton)
     public static Robot robot;
@@ -65,7 +51,8 @@ public class Robot {
     public OpticalDistanceSensor opticalDistanceSensor;
 
     public ModernRoboticsI2cColorSensor colorSensor;
-    public AdafruitI2cColorSensor adafruitColorSensor;
+
+    public AdafruitI2cColorSensor adafruitI2cColorSensor;
 
     public VoltageSensor voltageSensor;
     // endregion
@@ -91,6 +78,8 @@ public class Robot {
     public DcMotor scissorliftMotor;
 
     public ScaledDcMotor scissorLiftArmMotor;
+
+    static final double sissorLiftArmMotorSpeed = 0.5;
 
     //endregion
 
@@ -138,9 +127,13 @@ public class Robot {
     }
 
     public void init (HardwareMap hardwareMap, Telemetry telemetry) {
+        init (hardwareMap, telemetry, null);
+    }
+
+    public void init (HardwareMap hardwareMap, Telemetry telemetry, LinearOpMode currentOpMode) {
         hwMap = hardwareMap;
         this.telemetry = telemetry;
-
+        this.currentOpMode = currentOpMode;
 
         // Initiate motors and servos
         leftMotor = hardwareMap.dcMotor.get("left_drive");
@@ -183,7 +176,8 @@ public class Robot {
         opticalDistanceSensor = (hardwareMap.opticalDistanceSensor.get("ods"));
 
         colorSensor = ((ModernRoboticsI2cColorSensor) hardwareMap.colorSensor.get("color_sensor"));
-        //adafruitColorSensor = ((AdafruitI2cColorSensor)hardwareMap.colorSensor.get("color_sensor_adafruit"));
+
+        adafruitI2cColorSensor = ((AdafruitI2cColorSensor) hardwareMap.colorSensor.get("color_sensor_adafruit"));
 
         voltageSensor = hardwareMap.voltageSensor.get("Shoot Motors");
 
@@ -213,5 +207,9 @@ public class Robot {
             robot.leftShootMotor.setPower(shooting ? speed : 0);
             robot.rightShootMotor.setPower(shooting ? speed : 0);
         }
+    }
+
+    public void stop() {
+        stopped = true;
     }
 }

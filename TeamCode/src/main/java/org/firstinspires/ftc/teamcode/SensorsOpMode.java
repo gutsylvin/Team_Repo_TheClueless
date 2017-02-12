@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.hardware.adafruit.AdafruitI2cColorSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -8,11 +7,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 
-import org.firstinspires.ftc.teamcode.AutonomousNavigation.AutonomousOpMode;
 import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
+import org.lasarobotics.vision.util.color.Color;
 
 
 /**
@@ -26,7 +22,7 @@ public class SensorsOpMode extends OpMode {
     public OpticalDistanceSensor opticalDistanceSensor;
     public GyroSensor gyro;
     public ColorSensor color;
-    public AdafruitI2cColorSensor adafruitI2cColorSensor;
+    public ColorSensor adafruitColor;
 
     @Override
     public void init() {
@@ -37,10 +33,10 @@ public class SensorsOpMode extends OpMode {
         else {
             robot = Robot.robot;
         }
-        //adafruitI2cColorSensor = robot.adafruitColorSensor;
         opticalDistanceSensor = robot.opticalDistanceSensor;
         gyro = robot.gyro;
         color = robot.colorSensor;
+        adafruitColor = robot.adafruitI2cColorSensor;
         motors = new DcMotor[] {robot.leftMotor, robot.rightMotor, robot.conveyorMotor, robot.scissorliftMotor, robot.leftShootMotor, robot.rightShootMotor, robot.scissorLiftArmMotor, robot.ballCollectionMotor};
 
     }
@@ -53,12 +49,22 @@ public class SensorsOpMode extends OpMode {
         telemetry.addData("Color sensor green", color.green());
         telemetry.addData("Color sensor blue", color.blue());
         telemetry.addData("Color sensor grey", color.alpha());
+        telemetry.addData("Color sensor greyscale", getGreyscale(color));
+        telemetry.addData("Color sensor grey scaled", getGreyscale(color) / 255);
 
-        //telemetry.addData("color sensor adafruit", "red: " + adafruitI2cColorSensor.red()
-        //+ " blue: " + adafruitI2cColorSensor.blue() + " green: " + adafruitI2cColorSensor.green());
+        telemetry.addData("Adafruit Color sensor red", adafruitColor.red());
+        telemetry.addData("Adafruit Color sensor green", adafruitColor.green());
+        telemetry.addData("Adafruit Color sensor blue", adafruitColor.blue());
+        telemetry.addData("Adafruit Color sensor grey", adafruitColor.alpha());
+        telemetry.addData("Adafruit Color sensor greyscale", getGreyscale(adafruitColor));
+        telemetry.addData("Adafruit Color sensor grey scaled", getGreyscale(adafruitColor) / 255);
         for (DcMotor motor : motors) {
             telemetry.addData("Encoder count", motor.getCurrentPosition());
         }
         telemetry.update();
+    }
+
+    public double getGreyscale(ColorSensor c) {
+        return 0.299 * c.red() + 0.587 * c.green() + 0.114 * c.blue();
     }
 }

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.AutonomousNavigation;
+package org.firstinspires.ftc.teamcode.AutonomousOpModes;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.teamcode.AutonomousNavigation.MatchDetails;
 import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
 import org.firstinspires.ftc.teamcode.ShooterCalibration;
 

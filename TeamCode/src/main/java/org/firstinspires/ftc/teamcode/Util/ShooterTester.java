@@ -7,7 +7,6 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
-import org.firstinspires.ftc.teamcode.RobotHardware.Flywheels;
 import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
 import org.lasarobotics.library.util.Log;
 
@@ -24,7 +23,6 @@ public class ShooterTester extends OpMode {
     double startEncoderRight;
     double startTime;
 
-    Flywheels flywheels;
 
     Log logger;
 
@@ -37,7 +35,6 @@ public class ShooterTester extends OpMode {
     public void init() {
         robot.init(hardwareMap, telemetry);
         previousGamepad1 = new Gamepad();
-        flywheels = new Flywheels();
         timer = new ElapsedTime();
         logger = new Log("FIRST", "Shooter_test_log");
         telemetry.update();

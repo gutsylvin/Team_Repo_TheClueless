@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-import com.google.common.io.Files;
 
 /**
  * Simple logger that can write to multiple file formats for analyzing robot telemetry
