@@ -17,6 +17,8 @@ import org.lasarobotics.vision.opmode.extensions.CameraControlExtension;
 import org.lasarobotics.vision.util.ScreenOrientation;
 import org.opencv.core.Size;
 
+import static org.firstinspires.ftc.teamcode.AutonomousOpModes.AutonomousOpMode.HEADING_THRESHOLD;
+import static org.firstinspires.ftc.teamcode.AutonomousOpModes.AutonomousOpMode.P_TURN_COEFF;
 import static org.firstinspires.ftc.teamcode.RobotHardware.Robot.robot;
 
 /**
@@ -87,7 +89,9 @@ public class BeaconTest extends LinearVisionOpMode {
 
         waitForStart();
 
-        vpBeacon(0.25);
+        //gyroDriveUntilLine(0.075, 0.4, 6.2);
+        //gyroTurn(0.2, 90);
+        vpBeacon(0.125);
     }
 
     // Left to right
@@ -99,6 +103,114 @@ public class BeaconTest extends LinearVisionOpMode {
         UNKNOWN
     }
 
+    /**
+     * Method to spin on central axis to point in a new direction.
+     * Move will stop if either of these conditions occur:
+     * 1) Move gets to the heading (angle)
+     * 2) Driver stops the opmode running.
+     *
+     * @param speed Desired speed of turn.
+     * @param angle Absolute Angle (in Degrees) relative to last gyro reset.
+     *              0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
+     *              If a relative angle is required, add/subtract from current heading.
+     * @throws InterruptedException
+     */
+    public void gyroTurn(double speed, double angle)
+            throws InterruptedException {
+
+        speed *= SPEED_FACTOR;
+        double startTime = time;
+        // keep looping while we are still active, and not on heading.
+        while (opModeIsActive() && !onHeading(speed, angle, P_TURN_COEFF)) {
+            // Update telemetry & Allow time for other processes to run.
+            if (time > TURN_TIMEOUT + startTime) {
+                break;
+            }
+            telemetry.addData("time", time);
+            telemetry.addData("timeout", TURN_TIMEOUT * 1000);
+            telemetry.addData("left encoder", robot.leftMotor.getCurrentPosition());
+            telemetry.addData("right encoder", robot.rightMotor.getCurrentPosition());
+            RobotLog.i("left encoder : " + robot.leftMotor.getCurrentPosition());
+            RobotLog.i("right encoder : " + robot.rightMotor.getCurrentPosition());
+            telemetry.addData("gyro", robot.gyro.getHeading());
+            telemetry.update();
+            idle();
+        }
+
+        robot.leftMotor.setPower(0);
+        robot.rightMotor.setPower(0);
+    }
+
+    /**
+     * Perform one cycle of closed loop heading control.
+     *
+     * @param speed  Desired speed of turn.
+     * @param angle  Absolute Angle (in Degrees) relative to last gyro reset.
+     *               0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
+     *               If a relative angle is required, add/subtract from current heading.
+     * @param PCoeff Proportional Gain coefficient
+     * @return
+     */
+    boolean onHeading(double speed, double angle, double PCoeff) {
+        double error;
+        double steer;
+        boolean onTarget = false;
+        double leftSpeed;
+        double rightSpeed;
+
+        // determine turn power based on +/- error
+        error = getError(angle);
+
+        if (Math.abs(error) <= HEADING_THRESHOLD) {
+            steer = 0.0;
+            leftSpeed = 0.0;
+            rightSpeed = 0.0;
+            onTarget = true;
+        } else {
+            steer = getSteer(error, PCoeff);
+            rightSpeed = speed * steer * SPEED_FACTOR;
+            leftSpeed = -rightSpeed;
+        }
+
+        // Send desired speeds to motors.
+        robot.leftMotor.setPower(leftSpeed);
+        robot.rightMotor.setPower(rightSpeed);
+
+        // Display it for the driver.
+        telemetry.addData("Target", "%5.2f", angle);
+        telemetry.addData("Err/St", "%5.2f/%5.2f", error, steer);
+        telemetry.addData("Speed.", "%5.2f:%5.2f", leftSpeed, rightSpeed);
+
+        return onTarget;
+    }
+    /**
+     * getError determines the error between the target angle and the robot's current heading
+     *
+     * @param targetAngle Desired angle (relative to global reference established at last Gyro Reset).
+     * @return error angle: Degrees in the range +/- 180. Centered on the robot's frame of reference
+     * +ve error means the robot should turn LEFT (CCW) to reduce error.
+     */
+    public double getError(double targetAngle) {
+
+        double robotError;
+
+        // calculate error in -179 to +180 range  (
+        robotError = targetAngle - robot.gyro.getIntegratedZValue();
+        while (robotError > 180) robotError -= 360;
+        while (robotError <= -180) robotError += 360;
+        return robotError;
+    }
+
+    /**
+     * returns desired steering force.  +/- 1 range.  +ve = steer left
+     *
+     * @param error  Error angle in robot relative degrees
+     * @param PCoeff Proportional Gain Coefficient
+     * @return
+     */
+    public double getSteer(double error, double PCoeff) {
+        return Range.clip(error * PCoeff, -1, 1);
+    }
     //region beacon
     public void pushBasedOnState(BeaconState state) {
         if (state == BeaconState.REDBLUE) {
@@ -144,8 +256,8 @@ public class BeaconTest extends LinearVisionOpMode {
             else if (analysis.isLeftRed() && analysis.isRightBlue()) {
                 visionState = BeaconState.REDBLUE;
             }
-            else if (analysis.isLeftBlue() && analysis.isRightBlue()) {
-                visionState = BeaconState.BLUEBLUE;
+            else if (analysis.isLeftRed() && analysis.isRightRed()) {
+                visionState = BeaconState.REDRED;
             }
             else if (analysis.isRightBlue() && analysis.isRightBlue()) {
                 visionState = BeaconState.BLUEBLUE;
@@ -210,31 +322,32 @@ public class BeaconTest extends LinearVisionOpMode {
 
         Thread.sleep(200);
 
-        /*boolean retry = true;
+        boolean retry = true;
         BeaconState afterState = getBeaconState();
         if (afterState == BeaconState.REDRED) {
             if (MatchDetails.color == MatchDetails.TeamColor.BLUE) {
                 pushBasedOnState(afterState);
             }
-            retry = false;
+            else {
+                retry = false;
+            }
         }
         else if (afterState == BeaconState.BLUEBLUE) {
             if (MatchDetails.color == MatchDetails.TeamColor.RED) {
                 pushBasedOnState(afterState);
             }
-            retry = false;
+            else {
+                retry = false;
+            }
         }
-        else if (afterState != BeaconState.UNKNOWN) {
-            //pushBasedOnState(afterState);
-            //retry = true;
-
-            retry = false;
+        else if ((isRed(robot.colorSensor) && MatchDetails.color == MatchDetails.TeamColor.BLUE) || (isBlue(robot.colorSensor) && MatchDetails.color == MatchDetails.TeamColor.RED)) {
+            retry = true;
         }
         else {
             retry = false;
-        }*/
-        if ((isRed(robot.colorSensor) && MatchDetails.color == MatchDetails.TeamColor.BLUE)
-                || (isBlue(robot.colorSensor) && MatchDetails.color == MatchDetails.TeamColor.RED)) {
+        }
+
+        if (retry) {
             encoderDrive(0.75, -150, -150, 2000);
             robot.pushBoth(true);
             Thread.sleep(5000);
@@ -474,13 +587,13 @@ public class BeaconTest extends LinearVisionOpMode {
      */
 
     public void gyroDriveUntilLine(double speed
-                            /*double angle*/, double target) throws InterruptedException {
+                            /*double angle*/, double target, double adafruitTarget) throws InterruptedException {
 
-        gyroDriveUntilLine(speed, speed, target);
+        gyroDriveUntilLine(speed, speed, target, adafruitTarget);
     }
 
     public void gyroDriveUntilLine(double leftSpeed, double rightSpeed
-                            /*double angle*/, double target) throws InterruptedException {
+                            /*double angle*/, double target, double adafruitTarget) throws InterruptedException {
 
         runtime.reset();
         // Ensure that the opmode is still active
@@ -500,7 +613,7 @@ public class BeaconTest extends LinearVisionOpMode {
                 telemetry.addData("light", scaledValue);
                 telemetry.addData("gyro", robot.gyro.getHeading());
                 telemetry.update();
-                if (scaledValue >= target) {
+                if (scaledValue >= target || (getGreyscale(robot.adafruitI2cColorSensor) / 255 > adafruitTarget)) {
                     stopRobotMotion();
                     return;
                 }
@@ -515,6 +628,10 @@ public class BeaconTest extends LinearVisionOpMode {
             robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
+    }
+
+    public double getGreyscale(ColorSensor c) {
+        return 0.299 * c.red() + 0.587 * c.green() + 0.114 * c.blue();
     }
 
     public void stopRobotMotion() {

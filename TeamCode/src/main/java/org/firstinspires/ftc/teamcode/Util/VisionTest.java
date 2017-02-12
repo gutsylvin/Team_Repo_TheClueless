@@ -28,7 +28,7 @@ public class VisionTest extends LinearVisionOpMode {
         enableExtension(Extensions.ROTATION);       //Automatic screen rotation correction
         enableExtension(Extensions.CAMERA_CONTROL); //Manual camera control
 
-        beacon.setAnalysisMethod(Beacon.AnalysisMethod.FAST);
+        beacon.setAnalysisMethod(Beacon.AnalysisMethod.COMPLEX);
 
         /**
          * Set color tolerances
