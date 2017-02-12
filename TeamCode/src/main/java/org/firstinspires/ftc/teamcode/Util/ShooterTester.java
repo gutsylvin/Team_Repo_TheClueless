@@ -83,9 +83,9 @@ public class ShooterTester extends OpMode {
         telemetry.addData("speed", shootSpeed);
 
         boolean conveyor = gamepad1.b;
+        boolean sweeper = gamepad1.x;
 
-
-
+        robot.ballCollectionMotor.setPower(sweeper ? 1 : 0);
         robot.conveyorMotor.setPower(conveyor ? 1 : 0);
 
         try {
