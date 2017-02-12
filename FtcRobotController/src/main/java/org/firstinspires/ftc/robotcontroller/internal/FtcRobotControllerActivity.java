@@ -40,15 +40,27 @@ import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
+import android.media.MediaPlayer;
+import android.content.SharedPreferences;
+import android.content.res.Configuration;
+import android.content.res.Resources;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbManager;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.webkit.WebView;
+import android.widget.Button;
+import android.widget.EditText;
 import android.webkit.WebView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -88,6 +100,7 @@ import com.qualcomm.robotcore.wifi.NetworkConnectionFactory;
 import com.qualcomm.robotcore.wifi.NetworkType;
 import com.qualcomm.robotcore.wifi.WifiDirectAssistant;
 
+import org.firstinspires.ftc.robotcontroller.internal.EmotionEngine.EmotionManager;
 import org.firstinspires.ftc.robotcore.internal.AppUtil;
 import org.firstinspires.inspection.RcInspectionActivity;
 
@@ -98,6 +111,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class FtcRobotControllerActivity extends Activity {
 
   public static final String TAG = "RCActivity";
+
+  public static String instructionsPath;
+
+  private static final String PATH_TO_INSTRUCTIONS_FILE = "/storage/sdcard1/FIRST/";
 
   private static final int REQUEST_CONFIG_WIFI_CHANNEL = 1;
   private static final boolean USE_DEVICE_EMULATION = false;
@@ -122,7 +139,10 @@ public class FtcRobotControllerActivity extends Activity {
   protected TextView[] textGamepad = new TextView[NUM_GAMEPADS];
   protected TextView textOpMode;
   protected TextView textErrorMessage;
+  protected Button button;
   protected ImmersiveMode immersion;
+
+  protected EditText editFile;
 
   protected UpdateUI updateUI;
   protected Dimmer dimmer;
@@ -133,6 +153,8 @@ public class FtcRobotControllerActivity extends Activity {
 
   protected FtcEventLoop eventLoop;
   protected Queue<UsbDevice> receivedUsbAttachmentNotifications;
+
+  MediaPlayer rickroll;
 
   protected class RobotRestarter implements Restarter {
 
@@ -196,7 +218,6 @@ public class FtcRobotControllerActivity extends Activity {
     super.onCreate(savedInstanceState);
     RobotLog.writeLogcatToDisk();
     RobotLog.vv(TAG, "onCreate()");
-
     receivedUsbAttachmentNotifications = new ConcurrentLinkedQueue<UsbDevice>();
     eventLoop = null;
 
@@ -234,6 +255,45 @@ public class FtcRobotControllerActivity extends Activity {
     textErrorMessage = (TextView) findViewById(R.id.textErrorMessage);
     textGamepad[0] = (TextView) findViewById(R.id.textGamepad1);
     textGamepad[1] = (TextView) findViewById(R.id.textGamepad2);
+    button = (Button) findViewById(R.id.rickroll_button);
+    editFile = (EditText) findViewById(R.id.editText);
+    editFile.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+      @Override
+      public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+          boolean handled = false;
+          if (actionId == EditorInfo.IME_ACTION_DONE) {
+            instructionsPath = PATH_TO_INSTRUCTIONS_FILE + editFile.getText().toString();
+            if (!new File(instructionsPath).exists()) {
+              editFile.setText("File doesn't exist!", TextView.BufferType.EDITABLE);
+            }
+            else {
+              FtcRobotControllerActivity.instructionsPath = editFile.getText().toString();
+            }
+            handled = true;
+          }
+          return handled;
+      }
+    });
+
+    EmotionManager.initializeTTS(this);
+
+    rickroll = MediaPlayer.create(this, R.raw.rickroll);
+    rickroll.setLooping(true);
+
+    button.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        if (rickroll.isPlaying()) {
+          rickroll.pause();
+        }
+        else {
+          rickroll.start();
+        }
+      }
+    });
+
+
+
     immersion = new ImmersiveMode(getWindow().getDecorView());
     dimmer = new Dimmer(this);
     dimmer.longBright();
@@ -255,6 +315,7 @@ public class FtcRobotControllerActivity extends Activity {
 
     wifiLock.acquire();
     callback.networkConnectionUpdate(WifiDirectAssistant.Event.DISCONNECTED);
+    readNetworkType(NETWORK_TYPE_FILENAME);
     bindToService();
   }
 
@@ -295,7 +356,6 @@ public class FtcRobotControllerActivity extends Activity {
   protected void onResume() {
     super.onResume();
     RobotLog.vv(TAG, "onResume()");
-    readNetworkType(NETWORK_TYPE_FILENAME);
   }
 
   @Override
@@ -361,6 +421,12 @@ public class FtcRobotControllerActivity extends Activity {
     String fileContents = readFile(networkTypeFile);
     networkType = NetworkConnectionFactory.getTypeFromString(fileContents);
     programmingModeController.setCurrentNetworkType(networkType);
+
+    // update the preferences
+    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+    SharedPreferences.Editor editor = preferences.edit();
+    editor.putString(NetworkConnectionFactory.NETWORK_CONNECTION_TYPE, networkType.toString());
+    editor.commit();
   }
 
   private String readFile(File file) {
@@ -488,7 +554,13 @@ public class FtcRobotControllerActivity extends Activity {
     HardwareFactory factory;
     RobotConfigFile file = cfgFileMgr.getActiveConfigAndUpdateUI();
     HardwareFactory hardwareFactory = new HardwareFactory(context);
-    hardwareFactory.setXmlPullParser(file.getXml());
+    try {
+      hardwareFactory.setXmlPullParser(file.getXml());
+    } catch (Resources.NotFoundException e) {
+      file = RobotConfigFile.noConfig(cfgFileMgr);
+      hardwareFactory.setXmlPullParser(file.getXml());
+      cfgFileMgr.setActiveConfigAndUpdateUI(false, file);
+    }
     factory = hardwareFactory;
 
     eventLoop = new FtcEventLoop(factory, createOpModeRegister(), callback, this, programmingModeController);
