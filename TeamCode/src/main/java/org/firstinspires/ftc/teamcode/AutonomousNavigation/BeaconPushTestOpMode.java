@@ -1,10 +1,8 @@
 package org.firstinspires.ftc.teamcode.AutonomousNavigation;
 
-import com.qualcomm.hardware.hitechnic.HiTechnicNxtLightSensor;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.LightSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.RobotLog;
@@ -17,8 +15,6 @@ import org.lasarobotics.vision.opmode.LinearVisionOpMode;
 import org.lasarobotics.vision.opmode.extensions.CameraControlExtension;
 import org.lasarobotics.vision.util.ScreenOrientation;
 import org.opencv.core.Size;
-
-import static org.firstinspires.ftc.teamcode.AutonomousNavigation.AutonomousOpMode.LINE_FOLLOW_TARGET;
 
 
 /**

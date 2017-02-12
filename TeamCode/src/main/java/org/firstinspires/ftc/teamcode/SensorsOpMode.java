@@ -7,11 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 
-import org.firstinspires.ftc.teamcode.AutonomousNavigation.AutonomousOpMode;
 import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
 
 
 /**

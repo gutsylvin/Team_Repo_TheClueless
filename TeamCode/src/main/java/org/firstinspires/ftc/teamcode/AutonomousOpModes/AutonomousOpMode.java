@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.AutonomousNavigation;
+package org.firstinspires.ftc.teamcode.AutonomousOpModes;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.teamcode.AutonomousNavigation.MatchDetails;
 import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
 import org.firstinspires.ftc.teamcode.ShooterCalibration;
 import org.firstinspires.ftc.robotcontroller.internal.EmotionEngine.EmotionManager;
@@ -512,101 +513,6 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         robot.rightMotor.setPower(0);
         robot.leftPushServo.setPosition(0);
         robot.rightPushServo.setPosition(0.961);
-    }
-
-
-
-    void driveCenteredBeacon(double speed, int timeoutMs, double target) {
-        boolean reachedBeacon = false;
-        double startTime = time * 1000;
-
-        boolean leftRed = false;
-
-        // Should we use the left side or the right side? -- Note, this is only called once,
-        // so if the initial analysis is wrong, uhhh, that's awkward. We just gave our opponents 30 points
-        // TODO fix that.
-        Beacon.BeaconAnalysis preAnalysis = beacon.getAnalysis();
-        if (preAnalysis.getConfidence() > CONFIDENCE_THRESHOLD) {
-            if (preAnalysis.isLeftKnown()) {
-                if (preAnalysis.isLeftBlue()) {
-                    leftRed = false;
-                } else {
-                    // It's red.
-                    leftRed = true;
-                }
-            } else if (preAnalysis.isRightKnown()) {
-                if (preAnalysis.isRightBlue()) {
-                    leftRed = true;
-                } else {
-                    leftRed = false;
-                }
-            }
-        } else {
-            // Try again.
-            // TODO Make it so the robot flails around trying to find a high confidence result.
-        }
-
-        if (leftRed) {
-            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
-                robot.push(true);
-            } else {
-                robot.push(false);
-            }
-        } else {
-            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
-                robot.push(false);
-            } else {
-                robot.push(true);
-            }
-        }
-
-        while (opModeIsActive() && !reachedBeacon && time * 1000 - startTime > timeoutMs) {
-
-            // Check if we need to break out of the loop
-            Beacon.BeaconAnalysis analysis = beacon.getAnalysis();
-            if (analysis.isBeaconFullyBlue()) {
-                if (MatchDetails.color == MatchDetails.TeamColor.BLUE) {
-                    // Very good
-                    break;
-                } else {
-                    // fuck
-                    // TODO Try again, this is a disaster
-                }
-            }
-            if (analysis.isBeaconFullyRed()) {
-                if (MatchDetails.color == MatchDetails.TeamColor.RED) {
-                    // 'ery good
-                    break;
-                } else {
-                    // fuck again
-                    // TODO ditto
-                }
-            }
-
-            reviseColor();
-
-            double error = robot.opticalDistanceSensor.getLightDetected() - LINE_FOLLOW_TARGET;
-            // We still need to move forward.
-            if (robot.opticalDistanceSensor.getLightDetected() > LINE_FOLLOW_TARGET) {
-                // The input from the light sensors overrides the phone camera
-                // Sorry, Phone Camera. You were crappy anyways.
-                robot.rightMotor.setPower(speed + error * P_LINE_COEFF);
-                robot.leftMotor.setPower(speed - error * P_LINE_COEFF);
-                continue;
-            } else {
-                double gyroError = robot.gyro.getHeading() - target;
-
-                if (gyroError > 0) {
-                    robot.rightMotor.setPower(speed + error * P_LINE_COEFF);
-                    robot.leftMotor.setPower(speed - error * P_LINE_COEFF);
-                }
-                else {
-                    robot.rightMotor.setPower(speed + error * P_LINE_COEFF);
-                    robot.leftMotor.setPower(speed - error * P_LINE_COEFF);
-                }
-                continue;
-            }
-        }
     }
 
     public boolean reviseColor () {

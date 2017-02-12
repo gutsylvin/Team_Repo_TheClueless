@@ -1,10 +1,11 @@
-package org.firstinspires.ftc.teamcode.AutonomousNavigation;
+package org.firstinspires.ftc.teamcode.AutonomousOpModes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 
+import org.firstinspires.ftc.teamcode.AutonomousNavigation.MatchDetails;
 import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
 
 /**
