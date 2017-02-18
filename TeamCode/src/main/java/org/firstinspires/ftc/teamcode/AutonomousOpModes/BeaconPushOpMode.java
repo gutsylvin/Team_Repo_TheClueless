@@ -28,7 +28,8 @@ public class BeaconPushOpMode extends LinearVisionOpMode {
     enum BeaconTestType {
         VISIONPROCESSING,
         COLORSENSOR,
-        RESET
+        RESET,
+        BOTH
     }
     private Beacon localBeacon;
     private BeaconTestType type = BeaconTestType.COLORSENSOR;
@@ -97,6 +98,9 @@ public class BeaconPushOpMode extends LinearVisionOpMode {
             if (gamepad1.x) {
                 type = BeaconTestType.RESET;
             }
+            if (gamepad1.y) {
+                type = BeaconTestType.BOTH;
+            }
             telemetry.addData("Current mode", type.toString());
             telemetry.update();
             switch (type) {
@@ -109,8 +113,54 @@ public class BeaconPushOpMode extends LinearVisionOpMode {
                 case RESET:
                     robot.pushBoth(false);
                     break;
+                case BOTH:
+                    pushBasedOnState(getBothBeaconState());
+                    break;
                 default:
             }
+        }
+    }
+
+    BeaconState getBothBeaconState() {
+        Beacon.BeaconAnalysis analysis = beacon.getAnalysis();
+        RobotLog.d(analysis.toString());
+
+        BeaconState visionState = BeaconState.UNKNOWN;
+        BeaconState sensorState = BeaconState.UNKNOWN;
+
+        if (analysis.isLeftKnown() && analysis.isRightKnown()) {
+            if (analysis.isLeftBlue() && analysis.isRightRed()) {
+                visionState = BeaconState.BLUERED;
+            }
+            else if (analysis.isLeftRed() && analysis.isRightBlue()) {
+                visionState = BeaconState.REDBLUE;
+            }
+            else if (analysis.isLeftBlue() && analysis.isRightBlue()) {
+                visionState = BeaconState.BLUEBLUE;
+            }
+            else if (analysis.isRightBlue() && analysis.isRightBlue()) {
+                visionState = BeaconState.BLUEBLUE;
+            }
+            else {
+                visionState = BeaconState.UNKNOWN;
+            }
+        }
+
+        if (!notDetecting(robot.colorSensor)) {
+            if (isRed(robot.colorSensor)) {
+                sensorState = BeaconState.BLUERED;
+            }
+            else {
+                sensorState = BeaconState.REDBLUE;
+            }
+        }
+
+        if (visionState == sensorState) {
+            // Good
+            return visionState;
+        }
+        else {
+            return BeaconState.UNKNOWN;
         }
     }
 
@@ -118,6 +168,8 @@ public class BeaconPushOpMode extends LinearVisionOpMode {
     enum BeaconState {
         REDBLUE,
         BLUERED,
+        BLUEBLUE,
+        REDRED,
         UNKNOWN
     }
 
