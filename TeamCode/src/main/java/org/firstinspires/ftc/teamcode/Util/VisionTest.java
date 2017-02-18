@@ -24,9 +24,9 @@ public class VisionTest extends LinearVisionOpMode {
 
         this.setFrameSize(new Size(900, 900));
 
-        enableExtension(Extensions.BEACON);         //Beacon detection
-        enableExtension(Extensions.ROTATION);       //Automatic screen rotation correction
-        enableExtension(Extensions.CAMERA_CONTROL); //Manual camera control
+        //enableExtension(Extensions.BEACON);         //Beacon detection
+        //enableExtension(Extensions.ROTATION);       //Automatic screen rotation correction
+        //enableExtension(Extensions.CAMERA_CONTROL); //Manual camera control
 
         beacon.setAnalysisMethod(Beacon.AnalysisMethod.COMPLEX);
 

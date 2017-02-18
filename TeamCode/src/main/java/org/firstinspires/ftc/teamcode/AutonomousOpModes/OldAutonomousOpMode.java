@@ -1,12 +1,15 @@
 package org.firstinspires.ftc.teamcode.AutonomousOpModes;
 
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cColorSensor;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.RobotLog;
+import com.qualcomm.robotcore.util.Util;
 
 import org.firstinspires.ftc.teamcode.AutonomousNavigation.MatchDetails;
 import org.firstinspires.ftc.teamcode.RobotHardware.Robot;
@@ -58,7 +61,7 @@ public class OldAutonomousOpMode extends LinearVisionOpMode {
 
     // These constants define the desired driving/control characteristics
     // The can/should be tweaked to suite the specific robot drive train.
-    static final double TURN_SPEED = 0.15;     // Nominal half speed for better accuracy.
+    static final double TURN_SPEED = 0.175;     // Nominal half speed for better accuracy.
     static final double TURN_TIMEOUT = 10;
 
     static final double START_ENCODER = 200;    // Driving subroutines will use this encoder value as the "revving up" period
@@ -146,7 +149,6 @@ public class OldAutonomousOpMode extends LinearVisionOpMode {
             telemetry.update();
             if (ShooterCalibration.SHOOTING_SPEED == 0) {
                 EmotionManager.speak("YOU SCREWED UP, NO CALIBRATION PERFORMED!");
-                return;
             }
             idle();
         }
@@ -154,15 +156,14 @@ public class OldAutonomousOpMode extends LinearVisionOpMode {
         if (MatchDetails.color == MatchDetails.TeamColor.RED) {
             encoderDrive(0.30, 0.5, 0.20, 1750, 1750, 8000, false);
 
-            gyroDriveUntilLine(0.1, 0.1, 0.45);
-            encoderDrive(0.3, 75, 400);
+            gyroDriveUntilLine(0.1, 0.45, 6.2);
 
             gyroTurn(TURN_SPEED * 0.65, 86);
 
             //robot.shoot(true, 0.4);
             robot.shoot(true, ShooterCalibration.SHOOTING_SPEED);
             Thread.sleep(300);
-            pushBeacon(0.125, 90);
+            pushBeacon(0.125);
 
             Thread.sleep(300);
             //robot.ballCollectionMotor.setPower(1);
@@ -175,14 +176,14 @@ public class OldAutonomousOpMode extends LinearVisionOpMode {
             encoderDrive(0.7, -240, -240, 3000);
             gyroTurn(TURN_SPEED * 0.65, -1);
             encoderDrive(0.5, 0.75, 0.25, 1500, 1500, 10000, false);
-            gyroDriveUntilLine(0.125, 0.1, 0.45);
+            gyroDriveUntilLine(0.1, 0.125, 0.45, 6.2);
 
             encoderDrive(0.5, 80, 2000);
 
             gyroTurn(TURN_SPEED * 0.65, 86);
 
             encoderDrive(0.5, 50, 1500);  // move forward before pushing beacon
-            pushBeacon(0.125, 87);
+            pushBeacon(0.125);
 
             encoderDrive(0.8, -250, -250, 3000);
             gyroTurn(TURN_SPEED * 0.8, 56);
@@ -192,7 +193,7 @@ public class OldAutonomousOpMode extends LinearVisionOpMode {
 
             encoderDrive(0.25, 0.5, 0.20, 1750, 1750, 8000, false);
 
-            gyroDriveUntilLine(0.1, 0.1, 0.45);
+            gyroDriveUntilLine(0.1, 0.45, 6.2);
             encoderDrive(0.3, 75, 400);
 
             gyroTurn(TURN_SPEED * 0.65, -84);
@@ -200,7 +201,7 @@ public class OldAutonomousOpMode extends LinearVisionOpMode {
 
             robot.shoot(true, ShooterCalibration.SHOOTING_SPEED);
             Thread.sleep(300);
-            pushBeacon(0.1, 90);
+            pushBeacon(0.1);
 
             Thread.sleep(300);
             robot.conveyorMotor.setPower(1);
@@ -214,14 +215,14 @@ public class OldAutonomousOpMode extends LinearVisionOpMode {
             gyroTurn(TURN_SPEED * 0.65, -2);
 
             encoderDrive(0.5, 0.75, 0.25, 1600, 1400, 10000, false);
-            gyroDriveUntilLine(0.145, 0.1, 0.45);
+            gyroDriveUntilLine(0.145, 0.1, 0.45, 6.2);
 
             encoderDrive(0.5, 100, 2000);
 
             gyroTurn(TURN_SPEED * 0.65, -88);
 
             encoderDrive(0.5, 50, 1500);  // move forward before pushing beacon
-            pushBeacon(0.125, 90);
+            pushBeacon(0.125);
 
             encoderDrive(0.8, -250, -250, 3000);
             gyroTurn(TURN_SPEED * 0.8, -55);
@@ -336,6 +337,177 @@ public class OldAutonomousOpMode extends LinearVisionOpMode {
         }
     }
 
+    void vpBeacon(double speed) throws InterruptedException {
+        robot.leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        robot.rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        telemetry.addData("Team Color", MatchDetails.color);
+
+        Thread.sleep(200);
+
+        BeaconTest.BeaconState state = getBeaconState();
+
+        while (state == BeaconTest.BeaconState.UNKNOWN) {
+            encoderDrive(speed, 150, 2250);
+            Thread.sleep(200);
+            state = getBeaconState();
+        }
+
+        pushBasedOnState(state);
+
+        encoderDrive(speed, 800, 3000);
+
+        robot.leftMotor.setPower(0);
+        robot.rightMotor.setPower(0);
+
+        robot.pushBoth(false);
+
+        Thread.sleep(200);
+
+        boolean retry = true;
+        BeaconTest.BeaconState afterState = getBeaconState();
+        if (afterState == BeaconTest.BeaconState.REDRED) {
+            if (MatchDetails.color == MatchDetails.TeamColor.BLUE) {
+                pushBasedOnState(afterState);
+            }
+            else {
+                retry = false;
+            }
+        }
+        else if (afterState == BeaconTest.BeaconState.BLUEBLUE) {
+            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
+                pushBasedOnState(afterState);
+            }
+            else {
+                retry = false;
+            }
+        }
+        else if ((isRed(robot.colorSensor) && MatchDetails.color == MatchDetails.TeamColor.BLUE) || (isBlue(robot.colorSensor) && MatchDetails.color == MatchDetails.TeamColor.RED)) {
+            retry = true;
+        }
+        else {
+            retry = false;
+        }
+
+        if (retry) {
+            encoderDrive(0.75, -150, -150, 2000);
+            robot.pushBoth(true);
+            Thread.sleep(5000);
+            encoderDrive(0.5, 300, 300, 1750);
+            Thread.sleep(300);
+            encoderDrive(0.5, -75, -75, 800);
+        }
+    }
+
+    public void pushBasedOnState(BeaconTest.BeaconState state) {
+        if (state == BeaconTest.BeaconState.REDBLUE) {
+            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
+                robot.push(true);
+            }
+            else {
+                robot.push(false);
+            }
+        }
+        else if (state == BeaconTest.BeaconState.BLUERED) {
+            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
+                robot.push(false);
+            }
+            else {
+                robot.push(true);
+            }
+        }
+        else if (state == BeaconTest.BeaconState.BLUEBLUE) {
+            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
+                robot.pushBoth(true);
+            }
+        }
+        else if (state == BeaconTest.BeaconState.REDRED) {
+            if (MatchDetails.color == MatchDetails.TeamColor.BLUE) {
+                robot.pushBoth(true);
+            }
+        }
+    }
+
+    // Assumes both sides are different colors
+    BeaconTest.BeaconState getBeaconState() {
+        Beacon.BeaconAnalysis analysis = beacon.getAnalysis();
+        RobotLog.d(analysis.toString());
+
+        BeaconTest.BeaconState visionState = BeaconTest.BeaconState.UNKNOWN;
+        BeaconTest.BeaconState sensorState = BeaconTest.BeaconState.UNKNOWN;
+
+        if (analysis.isLeftKnown() && analysis.isRightKnown()) {
+            if (analysis.isLeftBlue() && analysis.isRightRed()) {
+                visionState = BeaconTest.BeaconState.BLUERED;
+            }
+            else if (analysis.isLeftRed() && analysis.isRightBlue()) {
+                visionState = BeaconTest.BeaconState.REDBLUE;
+            }
+            else if (analysis.isLeftRed() && analysis.isRightRed()) {
+                visionState = BeaconTest.BeaconState.REDRED;
+            }
+            else if (analysis.isRightBlue() && analysis.isRightBlue()) {
+                visionState = BeaconTest.BeaconState.BLUEBLUE;
+            }
+            else {
+                visionState = BeaconTest.BeaconState.UNKNOWN;
+            }
+        }
+        else {
+            visionState = BeaconTest.BeaconState.UNKNOWN;
+        }
+
+        if (!notDetecting(robot.colorSensor)) {
+            if (isRed(robot.colorSensor)) {
+                sensorState = BeaconTest.BeaconState.BLUERED;
+            }
+            else {
+                sensorState = BeaconTest.BeaconState.REDBLUE;
+            }
+        }
+
+        if (visionState == BeaconTest.BeaconState.BLUEBLUE || visionState == BeaconTest.BeaconState.REDRED) {
+            return visionState;
+        }
+
+        if (visionState == sensorState) {
+            // Good
+            return visionState;
+        }
+        else if (visionState == BeaconTest.BeaconState.UNKNOWN) {
+            return sensorState;
+        }
+        else if (sensorState == BeaconTest.BeaconState.UNKNOWN) {
+            return visionState;
+        }
+        else {
+            return BeaconTest.BeaconState.UNKNOWN;
+        }
+    }
+
+    public double getGreyscale(ColorSensor c) {
+        return 0.299 * c.red() + 0.587 * c.green() + 0.114 * c.blue();
+    }
+
+    boolean isRed (ColorSensor c) {
+        if (c.red() > c.blue()) {
+            return true;
+        }
+        return false;
+    }
+
+    boolean isBlue (ColorSensor c) {
+        if (c.blue() > c.red()) {
+            return true;
+        }
+        return false;
+    }
+
+
+    public boolean notDetecting (ModernRoboticsI2cColorSensor c) {
+        return c.red() == c.blue();
+    }
+
     public void encoderDrive(double speed,
                              double speed1,
                              double speed2,
@@ -420,13 +592,13 @@ public class OldAutonomousOpMode extends LinearVisionOpMode {
      */
 
     public void gyroDriveUntilLine(double speed
-                            /*double angle*/, double target) throws InterruptedException {
+                            /*double angle*/, double target, double adafruitTarget) throws InterruptedException {
 
-        gyroDriveUntilLine(speed, speed, target);
+        gyroDriveUntilLine(speed, speed, target, adafruitTarget);
     }
 
     public void gyroDriveUntilLine(double leftSpeed, double rightSpeed
-                            /*double angle*/, double target) throws InterruptedException {
+                            /*double angle*/, double target, double adafruitTarget) throws InterruptedException {
 
         runtime.reset();
         // Ensure that the opmode is still active
@@ -446,7 +618,7 @@ public class OldAutonomousOpMode extends LinearVisionOpMode {
                 telemetry.addData("light", scaledValue);
                 telemetry.addData("gyro", robot.gyro.getHeading());
                 telemetry.update();
-                if (scaledValue >= target) {
+                if (scaledValue >= target || (getGreyscale(robot.adafruitI2cColorSensor) / 255 > adafruitTarget)) {
                     stopRobotMotion();
                     return;
                 }
@@ -468,6 +640,11 @@ public class OldAutonomousOpMode extends LinearVisionOpMode {
         robot.rightMotor.setPower(0);
     }
 
+    // returns whether a is within a range of c relative to b
+    public boolean within (double a, double b, double c) {
+        return a >= b+c && a <= b-c;
+    }
+
     /**
      * Method to spin on central axis to point in a new direction.
      * Move will stop if either of these conditions occur:
@@ -482,15 +659,16 @@ public class OldAutonomousOpMode extends LinearVisionOpMode {
      */
     public void gyroTurn(double speed, double angle)
             throws InterruptedException {
-
         speed *= SPEED_FACTOR;
         double startTime = time;
         // keep looping while we are still active, and not on heading.
+
         while (opModeIsActive() && !onHeading(speed, angle, P_TURN_COEFF)) {
             // Update telemetry & Allow time for other processes to run.
             if (time > TURN_TIMEOUT + startTime) {
                 break;
             }
+
             telemetry.addData("time", time);
             telemetry.addData("timeout", TURN_TIMEOUT * 1000);
             telemetry.addData("left encoder", robot.leftMotor.getCurrentPosition());
@@ -500,6 +678,7 @@ public class OldAutonomousOpMode extends LinearVisionOpMode {
             telemetry.addData("gyro", robot.gyro.getHeading());
             telemetry.update();
             idle();
+
         }
 
         robot.leftMotor.setPower(0);
@@ -508,114 +687,8 @@ public class OldAutonomousOpMode extends LinearVisionOpMode {
     //endregion
 
     //region beacon
-    void pushBeacon(double speed, double angle) throws InterruptedException {
-
-        robot.leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        robot.rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-
-        telemetry.addData("Team Color", MatchDetails.color);
-
-        encoderDriveColor(speed, 1000, 2250);
-
-        robot.leftMotor.setPower(0);
-        robot.rightMotor.setPower(0);
-        robot.leftPushServo.setPosition(0);
-        robot.rightPushServo.setPosition(0.93);
-    }
-
-
-
-    void driveCenteredBeacon(double speed, int timeoutMs, double target) {
-        boolean reachedBeacon = false;
-        double startTime = time * 1000;
-
-        boolean leftRed = false;
-
-        // Should we use the left side or the right side? -- Note, this is only called once,
-        // so if the initial analysis is wrong, uhhh, that's awkward. We just gave our opponents 30 points
-        // TODO fix that.
-        Beacon.BeaconAnalysis preAnalysis = beacon.getAnalysis();
-        if (preAnalysis.getConfidence() > CONFIDENCE_THRESHOLD) {
-            if (preAnalysis.isLeftKnown()) {
-                if (preAnalysis.isLeftBlue()) {
-                    leftRed = false;
-                } else {
-                    // It's red.
-                    leftRed = true;
-                }
-            } else if (preAnalysis.isRightKnown()) {
-                if (preAnalysis.isRightBlue()) {
-                    leftRed = true;
-                } else {
-                    leftRed = false;
-                }
-            }
-        } else {
-            // Try again.
-            // TODO Make it so the robot flails around trying to find a high confidence result.
-        }
-
-        if (leftRed) {
-            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
-                robot.push(true);
-            } else {
-                robot.push(false);
-            }
-        } else {
-            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
-                robot.push(false);
-            } else {
-                robot.push(true);
-            }
-        }
-
-        while (opModeIsActive() && !reachedBeacon && time * 1000 - startTime > timeoutMs) {
-
-            // Check if we need to break out of the loop
-            Beacon.BeaconAnalysis analysis = beacon.getAnalysis();
-            if (analysis.isBeaconFullyBlue()) {
-                if (MatchDetails.color == MatchDetails.TeamColor.BLUE) {
-                    // Very good
-                    break;
-                } else {
-                    // fuck
-                    // TODO Try again, this is a disaster
-                }
-            }
-            if (analysis.isBeaconFullyRed()) {
-                if (MatchDetails.color == MatchDetails.TeamColor.RED) {
-                    // 'ery good
-                    break;
-                } else {
-                    // fuck again
-                    // TODO ditto
-                }
-            }
-
-            reviseColor();
-
-            double error = robot.opticalDistanceSensor.getLightDetected() - LINE_FOLLOW_TARGET;
-            // We still need to move forward.
-            if (robot.opticalDistanceSensor.getLightDetected() > LINE_FOLLOW_TARGET) {
-                // The input from the light sensors overrides the phone camera
-                // Sorry, Phone Camera. You were crappy anyways.
-                robot.rightMotor.setPower(speed + error * P_LINE_COEFF);
-                robot.leftMotor.setPower(speed - error * P_LINE_COEFF);
-                continue;
-            } else {
-                double gyroError = robot.gyro.getHeading() - target;
-
-                if (gyroError > 0) {
-                    robot.rightMotor.setPower(speed + error * P_LINE_COEFF);
-                    robot.leftMotor.setPower(speed - error * P_LINE_COEFF);
-                }
-                else {
-                    robot.rightMotor.setPower(speed + error * P_LINE_COEFF);
-                    robot.leftMotor.setPower(speed - error * P_LINE_COEFF);
-                }
-                continue;
-            }
-        }
+    void pushBeacon(double speed) throws InterruptedException {
+        vpBeacon(speed);
     }
 
     public boolean reviseColor () {

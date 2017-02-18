@@ -212,88 +212,6 @@ public class BeaconTest extends LinearVisionOpMode {
         return Range.clip(error * PCoeff, -1, 1);
     }
     //region beacon
-    public void pushBasedOnState(BeaconState state) {
-        if (state == BeaconState.REDBLUE) {
-            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
-                robot.push(true);
-            }
-            else {
-                robot.push(false);
-            }
-        }
-        else if (state == BeaconState.BLUERED) {
-            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
-                robot.push(false);
-            }
-            else {
-                robot.push(true);
-            }
-        }
-        else if (state == BeaconState.BLUEBLUE) {
-            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
-                robot.pushBoth(true);
-            }
-        }
-        else if (state == BeaconState.REDRED) {
-            if (MatchDetails.color == MatchDetails.TeamColor.BLUE) {
-                robot.pushBoth(true);
-            }
-        }
-    }
-
-    // Assumes both sides are different colors
-    BeaconState getBeaconState() {
-        Beacon.BeaconAnalysis analysis = beacon.getAnalysis();
-        RobotLog.d(analysis.toString());
-
-        BeaconState visionState = BeaconState.UNKNOWN;
-        BeaconState sensorState = BeaconState.UNKNOWN;
-
-        if (analysis.isLeftKnown() && analysis.isRightKnown()) {
-            if (analysis.isLeftBlue() && analysis.isRightRed()) {
-                visionState = BeaconState.BLUERED;
-            }
-            else if (analysis.isLeftRed() && analysis.isRightBlue()) {
-                visionState = BeaconState.REDBLUE;
-            }
-            else if (analysis.isLeftRed() && analysis.isRightRed()) {
-                visionState = BeaconState.REDRED;
-            }
-            else if (analysis.isRightBlue() && analysis.isRightBlue()) {
-                visionState = BeaconState.BLUEBLUE;
-            }
-            else {
-                visionState = BeaconState.UNKNOWN;
-            }
-        }
-
-        if (!notDetecting(robot.colorSensor)) {
-            if (isRed(robot.colorSensor)) {
-                sensorState = BeaconState.BLUERED;
-            }
-            else {
-                sensorState = BeaconState.REDBLUE;
-            }
-        }
-
-        if (visionState == BeaconState.BLUEBLUE || visionState == BeaconState.REDRED) {
-            return visionState;
-        }
-
-        if (visionState == sensorState) {
-            // Good
-            return visionState;
-        }
-        else if (visionState == BeaconState.UNKNOWN) {
-            return sensorState;
-        }
-        else if (sensorState == BeaconState.UNKNOWN) {
-            return visionState;
-        }
-        else {
-            return BeaconState.UNKNOWN;
-        }
-    }
 
     void vpBeacon(double speed) throws InterruptedException {
         robot.leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -354,6 +272,89 @@ public class BeaconTest extends LinearVisionOpMode {
             encoderDrive(0.5, 300, 300, 1750);
             Thread.sleep(300);
             encoderDrive(0.5, -75, -75, 800);
+        }
+    }
+
+    public void pushBasedOnState(BeaconTest.BeaconState state) {
+        if (state == BeaconTest.BeaconState.REDBLUE) {
+            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
+                robot.push(true);
+            }
+            else {
+                robot.push(false);
+            }
+        }
+        else if (state == BeaconTest.BeaconState.BLUERED) {
+            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
+                robot.push(false);
+            }
+            else {
+                robot.push(true);
+            }
+        }
+        else if (state == BeaconTest.BeaconState.BLUEBLUE) {
+            if (MatchDetails.color == MatchDetails.TeamColor.RED) {
+                robot.pushBoth(true);
+            }
+        }
+        else if (state == BeaconTest.BeaconState.REDRED) {
+            if (MatchDetails.color == MatchDetails.TeamColor.BLUE) {
+                robot.pushBoth(true);
+            }
+        }
+    }
+
+    // Assumes both sides are different colors
+    BeaconTest.BeaconState getBeaconState() {
+        Beacon.BeaconAnalysis analysis = beacon.getAnalysis();
+        RobotLog.d(analysis.toString());
+
+        BeaconTest.BeaconState visionState = BeaconTest.BeaconState.UNKNOWN;
+        BeaconTest.BeaconState sensorState = BeaconTest.BeaconState.UNKNOWN;
+
+        if (analysis.isLeftKnown() && analysis.isRightKnown()) {
+            if (analysis.isLeftBlue() && analysis.isRightRed()) {
+                visionState = BeaconTest.BeaconState.BLUERED;
+            }
+            else if (analysis.isLeftRed() && analysis.isRightBlue()) {
+                visionState = BeaconTest.BeaconState.REDBLUE;
+            }
+            else if (analysis.isLeftRed() && analysis.isRightRed()) {
+                visionState = BeaconTest.BeaconState.REDRED;
+            }
+            else if (analysis.isRightBlue() && analysis.isRightBlue()) {
+                visionState = BeaconTest.BeaconState.BLUEBLUE;
+            }
+            else {
+                visionState = BeaconTest.BeaconState.UNKNOWN;
+            }
+        }
+
+        if (!notDetecting(robot.colorSensor)) {
+            if (isRed(robot.colorSensor)) {
+                sensorState = BeaconTest.BeaconState.BLUERED;
+            }
+            else {
+                sensorState = BeaconTest.BeaconState.REDBLUE;
+            }
+        }
+
+        if (visionState == BeaconTest.BeaconState.BLUEBLUE || visionState == BeaconTest.BeaconState.REDRED) {
+            return visionState;
+        }
+
+        if (visionState == sensorState) {
+            // Good
+            return visionState;
+        }
+        else if (visionState == BeaconTest.BeaconState.UNKNOWN) {
+            return sensorState;
+        }
+        else if (sensorState == BeaconTest.BeaconState.UNKNOWN) {
+            return visionState;
+        }
+        else {
+            return BeaconTest.BeaconState.UNKNOWN;
         }
     }
 
@@ -629,7 +630,6 @@ public class BeaconTest extends LinearVisionOpMode {
             robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
     }
-
     public double getGreyscale(ColorSensor c) {
         return 0.299 * c.red() + 0.587 * c.green() + 0.114 * c.blue();
     }
