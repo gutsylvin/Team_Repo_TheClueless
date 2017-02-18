@@ -175,26 +175,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       android:visibility="invisible"
       android:text="" />
 
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:inputType="textPersonName"
-        android:text=""
-        android:ems="10"
-        android:id="@+id/editText"
-        android:layout_marginBottom="137dp"
-        android:imeOptions="actionDone"
-        android:layout_above="@+id/textGamepad1"
-        android:layout_centerHorizontal="true" />
 
-    <Button
-        android:text="Rickroll"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="43dp"
-        android:id="@+id/rickroll_button"
-        android:layout_alignTop="@+id/editText"
-        android:layout_centerHorizontal="true" />
 
 
   </RelativeLayout>

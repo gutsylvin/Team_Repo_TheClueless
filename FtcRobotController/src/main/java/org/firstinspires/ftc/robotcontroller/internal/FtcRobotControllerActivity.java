@@ -255,44 +255,8 @@ public class FtcRobotControllerActivity extends Activity {
     textErrorMessage = (TextView) findViewById(R.id.textErrorMessage);
     textGamepad[0] = (TextView) findViewById(R.id.textGamepad1);
     textGamepad[1] = (TextView) findViewById(R.id.textGamepad2);
-    button = (Button) findViewById(R.id.rickroll_button);
-    editFile = (EditText) findViewById(R.id.editText);
-    editFile.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-      @Override
-      public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-          boolean handled = false;
-          if (actionId == EditorInfo.IME_ACTION_DONE) {
-            instructionsPath = PATH_TO_INSTRUCTIONS_FILE + editFile.getText().toString();
-            if (!new File(instructionsPath).exists()) {
-              editFile.setText("File doesn't exist!", TextView.BufferType.EDITABLE);
-            }
-            else {
-              FtcRobotControllerActivity.instructionsPath = editFile.getText().toString();
-            }
-            handled = true;
-          }
-          return handled;
-      }
-    });
 
     EmotionManager.initializeTTS(this);
-
-    rickroll = MediaPlayer.create(this, R.raw.rickroll);
-    rickroll.setLooping(true);
-
-    button.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        if (rickroll.isPlaying()) {
-          rickroll.pause();
-        }
-        else {
-          rickroll.start();
-        }
-      }
-    });
-
-
 
     immersion = new ImmersiveMode(getWindow().getDecorView());
     dimmer = new Dimmer(this);
@@ -497,6 +461,11 @@ public class FtcRobotControllerActivity extends Activity {
     else if (id == R.id.action_settings) {
       Intent settingsIntent = new Intent(FtcRobotControllerSettingsActivity.launchIntent);
       startActivityForResult(settingsIntent, LaunchActivityConstantsList.FTC_CONFIGURE_REQUEST_CODE_ROBOT_CONTROLLER);
+      return true;
+    }
+    else if (id == R.id.action_autonomous_settings) {
+      Intent launchNewIntent = new Intent(FtcRobotControllerActivity.this,AutonomousSettings.class);
+      startActivity(launchNewIntent);
       return true;
     }
     else if (id == R.id.action_about) {
