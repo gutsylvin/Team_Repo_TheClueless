@@ -136,7 +136,7 @@ public class TankTeleop extends OpMode {
     @Override
     public void init_loop() {
         robot.leftPushServo.setPosition(0);
-        robot.rightPushServo.setPosition(0.961); // 245/255
+        robot.rightPushServo.setPosition(0.93); // 245/255
     }
 
     /*
@@ -145,7 +145,7 @@ public class TankTeleop extends OpMode {
     @Override
     public void start() {
         robot.leftPushServo.setPosition(0);
-        robot.rightPushServo.setPosition(0.961); // 245/255
+        robot.rightPushServo.setPosition(0.93); // 245/255
         recalculateSpeed();
     }
 
@@ -160,7 +160,7 @@ public class TankTeleop extends OpMode {
         if (firstLoop) {
             firstLoop = false;
             robot.leftPushServo.setPosition(0);
-            robot.rightPushServo.setPosition(0.961); // 245/255
+            robot.rightPushServo.setPosition(0.93); // 245/255
             robot.conveyorGate.setPosition(0.55);
             try {
                 previousGamepad1.copy(gamepad1);
@@ -183,7 +183,7 @@ public class TankTeleop extends OpMode {
 
         Toggle[] toggles = {new ServoToggle(Toggle.Button.BUMPER_RIGHT, robot.armReleasers, new double[]{0, 1}, Toggle.GamepadId.User1),
                             new ServoToggle(Toggle.Button.X, robot.leftPushServo, new double[]{0, 0.431}, Toggle.GamepadId.User1),
-                            new ServoToggle(Toggle.Button.B, robot.rightPushServo, new double[]{0.961, 0.5}, Toggle.GamepadId.User1),
+                            new ServoToggle(Toggle.Button.B, robot.rightPushServo, new double[]{0.93, 0.5}, Toggle.GamepadId.User1),
                             new ServoToggle(Toggle.Button.BUMPER_RIGHT, robot.conveyorGate, new double[] {0, 0.863}, Toggle.GamepadId.User2),
                             new MotorToggle(Toggle.Button.A, robot.ballCollectionMotor, new double[] {-1, 0}, Toggle.GamepadId.User2),
                             new MotorToggle(Toggle.Button.BUMPER_LEFT, new DcMotor[]{robot.leftShootMotor, robot.rightShootMotor}, new double[]{0.75, 0}, Toggle.GamepadId.User2),
@@ -306,7 +306,7 @@ public class TankTeleop extends OpMode {
         robot.scissorliftMotor.setPower(scissorLift);
 
         robot.leftPushServo.setPosition(leftBeacon ? 0.431 /*110/255*/ : 0);
-        robot.rightPushServo.setPosition(rightBeacon ? 0.5 : 0.961/*245/255*/);
+        robot.rightPushServo.setPosition(rightBeacon ? 0.5 : 0.93/*245/255*/);
 
         double scissorLiftArmSpeed = (gamepad2.left_trigger - gamepad2.right_trigger) * (scissorliftArmMaxSpeed);
         robot.scissorLiftArmMotor.setPower(scissorLiftArmSpeed);

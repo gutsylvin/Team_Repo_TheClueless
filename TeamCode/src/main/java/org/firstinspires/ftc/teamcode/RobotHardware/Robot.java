@@ -101,13 +101,13 @@ public class Robot {
 
     public void noPush () {
         robot.leftPushServo.setPosition(0);
-        robot.rightPushServo.setPosition(0.961);
+        robot.rightPushServo.setPosition(0.93);
     }
 
     public void push (boolean left) {
         if (left) {
             robot.leftPushServo.setPosition(0.431);
-            robot.rightPushServo.setPosition(0.961);
+            robot.rightPushServo.setPosition(0.93);
         }
         else {
             robot.rightPushServo.setPosition(0.5);
@@ -122,7 +122,7 @@ public class Robot {
         }
         else {
             robot.leftPushServo.setPosition(0);
-            robot.rightPushServo.setPosition(0.961);
+            robot.rightPushServo.setPosition(0.93);
         }
     }
 

@@ -121,8 +121,8 @@ public class OldAutonomousOpMode extends LinearVisionOpMode {
         telemetry.addData(">", "Calibrating Gyro");    //
         telemetry.update();
 
-        robot.leftPushServo.setPosition(0.1);
-        robot.rightPushServo.setPosition(0.9); // 245/255
+        robot.leftPushServo.setPosition(0);
+        robot.rightPushServo.setPosition(0.93); // 245/255
 
         telemetry.addData(">", "Robot Ready.");    //
         telemetry.update();
@@ -520,7 +520,7 @@ public class OldAutonomousOpMode extends LinearVisionOpMode {
         robot.leftMotor.setPower(0);
         robot.rightMotor.setPower(0);
         robot.leftPushServo.setPosition(0);
-        robot.rightPushServo.setPosition(0.961);
+        robot.rightPushServo.setPosition(0.93);
     }
 
 

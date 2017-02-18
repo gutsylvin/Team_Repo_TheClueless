@@ -124,8 +124,8 @@ public class AutonomousOpMode extends LinearVisionOpMode {
         telemetry.addData(">", "Calibrating Gyro");    //
         telemetry.update();
 
-        robot.leftPushServo.setPosition(0.1);
-        robot.rightPushServo.setPosition(0.9); // 245/255
+        robot.leftPushServo.setPosition(0);
+        robot.rightPushServo.setPosition(0.93); // 245/255
 
         telemetry.addData(">", "Robot Ready.");    //
         telemetry.update();
